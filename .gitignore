@@ -1,5 +1,6 @@
-# Sensitive configuration
+# Credentials and config
 config/config.env
+*.env
 
 # Python
 __pycache__/
@@ -7,28 +8,46 @@ __pycache__/
 *$py.class
 *.so
 .Python
-*.egg-info/
-dist/
 build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
 # Virtual Environment
 venv/
-env/
 ENV/
+env/
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
-
-# Output files
-*.log
-zendesk_summary_*.md
-zendesk_executive_summary_*.md
-zendesk_executive_summary_*.html
-zendesk_monitor_log.json
+*~
 
 # OS
 .DS_Store
 Thumbs.db
+
+# Logs
+*.log
+zendesk_monitor_log.json
+
+# Reports
+zendesk_summary_*.md
+zendesk_executive_*.html
+
+# MCP Server
+mcp_server/venv/
+mcp_server/*.log

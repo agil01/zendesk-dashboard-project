@@ -20,6 +20,7 @@ A comprehensive suite of tools for monitoring, reporting, and analyzing Zendesk 
 ## Overview
 
 This project provides multiple interfaces for monitoring Zendesk tickets:
+- **🤖 MCP Server**: AI-powered Zendesk integration for Claude Code (NEW!)
 - **Web Dashboard**: Real-time browser-based monitoring with auto-refresh
 - **Terminal Monitor**: Command-line dashboard with live updates and alerts
 - **Daily Reports**: Automated markdown and HTML reports
@@ -31,14 +32,14 @@ This project provides multiple interfaces for monitoring Zendesk tickets:
 
 ### ✨ Key Capabilities
 
+- **🤖 AI Integration**: Natural language Zendesk queries via Claude Code MCP
 - **Real-time Monitoring**: Auto-refreshing dashboards (configurable intervals)
 - **Visual Alerts**: Instant notifications for new urgent tickets
 - **Priority Tracking**: Color-coded priority levels (Urgent, High, Normal, Low)
 - **Status Analytics**: Track resolution rates and ticket status
 - **Executive Reporting**: Professional print-ready reports
-- **Multi-Interface**: Web, terminal, and document outputs
+- **Multi-Interface**: MCP, web, terminal, and document outputs
 - **Easy Sharing**: Share with team members via local network
-- **Zero Dependencies**: Only requires Python 3 and `requests` library
 
 ---
 
@@ -52,14 +53,24 @@ cp config/config.example.env config/config.env
 # Edit config/config.env with your credentials
 ```
 
-### 2. Start Web Dashboard
+### 2. **NEW!** Use with Claude Code MCP
+The easiest way to interact with Zendesk - use natural language:
+```
+Show me all urgent Zendesk tickets
+Search Zendesk for "access request"
+Create a summary of today's tickets
+```
+
+**Setup Guide**: See [MCP_QUICKSTART.md](MCP_QUICKSTART.md) ✨
+
+### 3. Or Start Web Dashboard
 ```bash
 cd scripts
 python3 zendesk_server.py
 # Open http://localhost:8080
 ```
 
-### 3. Or Start Terminal Monitor
+### 4. Or Start Terminal Monitor
 ```bash
 cd scripts
 ./start_monitor.sh
@@ -69,7 +80,31 @@ cd scripts
 
 ## Tools Included
 
-### 1. **Web Dashboard** (`zendesk_server.py`)
+### 1. **🤖 MCP Server** (NEW!)
+
+AI-powered Zendesk integration for Claude Code.
+
+**Features:**
+- Natural language queries
+- Real-time ticket data
+- Automated report generation
+- Smart search and filtering
+- Ticket monitoring and alerts
+
+**Usage:**
+```
+Just ask Claude in natural language:
+- "Show urgent Zendesk tickets"
+- "Search for access requests"
+- "Generate today's ticket summary"
+```
+
+**Setup:**
+See [MCP_QUICKSTART.md](MCP_QUICKSTART.md) for installation and usage.
+
+---
+
+### 2. **Web Dashboard** (`zendesk_server.py`)
 
 Real-time web interface with professional UI.
 
@@ -94,7 +129,7 @@ Access at: http://localhost:8080
 
 ---
 
-### 2. **Terminal Monitor** (`zendesk_monitor.py`)
+### 3. **Terminal Monitor** (`zendesk_monitor.py`)
 
 Command-line real-time dashboard.
 
@@ -123,7 +158,7 @@ python3 scripts/zendesk_monitor.py
 
 ---
 
-### 3. **Daily Summary Generator** (`zendesk_daily_summary.py`)
+### 4. **Daily Summary Generator** (`zendesk_daily_summary.py`)
 
 Generate markdown reports of daily tickets.
 
