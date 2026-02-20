@@ -1099,7 +1099,10 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
                 ` : ''}
 
                 <div class="section">
-                    <div class="section-title">📋 Recent Tickets</div>
+                    <div class="section-title">
+                        📋 Recent Tickets
+                        <span class="badge">${Math.min(tickets.length, 10)}</span>
+                    </div>
                     ${tickets.slice(0, 10).map(ticket => `
                         <div class="ticket-item ${ticket.priority === 'urgent' ? 'urgent' : ''}" data-ticket-id="${ticket.id}">
                             <div class="ticket-id">#${ticket.id} 🔗 ${renderSLABadge(ticket)}</div>
