@@ -1034,9 +1034,9 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
                 </div>
 
                 <div class="section">
-                    <div class="section-title">📨 Tickets by Channel</div>
+                    <div class="section-title">📨 Tickets by Channel <span style="font-size: 12px; color: #94a3b8; font-weight: 400;">(Click to drill-in)</span></div>
                     <div style="background: #1e293b; padding: 20px; border-radius: 12px; border: 1px solid #334155;">
-                        <canvas id="ticketsByChannelChart" style="max-height: 300px;"></canvas>
+                        <canvas id="ticketsByChannelChart" style="max-height: 300px; cursor: pointer;"></canvas>
                     </div>
                 </div>
 
@@ -1328,6 +1328,22 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
                 options: {
                     responsive: true,
                     maintainAspectRatio: true,
+                    onClick: (event, activeElements) => {
+                        if (activeElements.length > 0) {
+                            const index = activeElements[0].index;
+                            const channelName = channelLabels[index];
+
+                            // Filter tickets by channel
+                            const filterFn = (ticket) => {
+                                const ticketChannel = ticket.via?.channel || 'unknown';
+                                const normalizedChannel = ticketChannel.toLowerCase() === 'api' ? 'API' : ticketChannel.charAt(0).toUpperCase() + ticketChannel.slice(1);
+                                return normalizedChannel === channelName;
+                            };
+
+                            // Show filtered tickets modal
+                            showFilteredTickets(filterFn, `📡 ${channelName} Channel Tickets`);
+                        }
+                    },
                     plugins: {
                         legend: {
                             display: true,
