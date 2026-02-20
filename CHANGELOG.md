@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.2.0] - 2026-02-20
+
+### Added
+
+#### Interactive Drill-Down
+- **Channel Chart Drill-Down**: Click-to-explore functionality on Tickets by Channel chart
+  - Click any channel slice (API, Email, Web, Mobile, Chat) to view tickets
+  - Modal displays filtered tickets with full details
+  - Visual indicator: "(Click to drill-in)" hint in section title
+  - Pointer cursor on hover for better UX
+  - Channel-specific filtering with proper ticket counts
+
+### Changed
+
+#### Visual Improvements
+- **API Label**: Changed "Api" to "API" (all caps) in legend and labels
+- **Updated Colors**:
+  - API: Changed from blue to turquoise (#14b8a6)
+  - Email: Changed from red to yellow (#eab308)
+  - Other channels remain: Web (green), Mobile (orange), Chat (purple)
+- Enhanced chart interactivity and user engagement
+
+---
+
 ## [2.1.0] - 2026-02-20
 
 ### Added
@@ -167,11 +191,22 @@ After:  User → Tools → [MCP or API] → Zendesk API
 
 ## Version History
 
+- **2.2.0** (2026-02-20) - Interactive Drill-Down & Visual Updates
 - **2.1.0** (2026-02-20) - Tickets by Channel Chart
 - **2.0.0** (2026-02-20) - MCP Integration
 - **1.0.0** (2026-02-19) - Initial Release
 
 ## Upgrade Path
+
+### From 2.1.0 to 2.2.0
+```bash
+cd ~/zendesk-dashboard-project
+git pull
+# Restart dashboard to see drill-down and color updates
+./scripts/start-dashboard.sh
+```
+
+**Impact**: Zero - all existing functionality preserved, enhanced with click-to-drill interactivity
 
 ### From 2.0.0 to 2.1.0
 ```bash
@@ -205,6 +240,6 @@ For issues, questions, or feature requests:
 
 ---
 
-**Current Version**: 2.1.0
+**Current Version**: 2.2.0
 **Last Updated**: 2026-02-20
 **Status**: Production Ready
