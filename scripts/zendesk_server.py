@@ -1281,7 +1281,8 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
             tickets.forEach(ticket => {
                 // Get channel from via object
                 const channel = ticket.via?.channel || 'unknown';
-                const channelName = channel.charAt(0).toUpperCase() + channel.slice(1);
+                // Special case for API to make it all caps
+                const channelName = channel.toLowerCase() === 'api' ? 'API' : channel.charAt(0).toUpperCase() + channel.slice(1);
                 channelCounts[channelName] = (channelCounts[channelName] || 0) + 1;
             });
 
@@ -1294,8 +1295,8 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
 
             // Color palette for channels
             const channelColors = {
-                'Api': '#3b82f6',      // Blue
-                'Email': '#ef4444',    // Red
+                'API': '#14b8a6',      // Turquoise
+                'Email': '#eab308',    // Yellow
                 'Web': '#22c55e',      // Green
                 'Mobile': '#f59e0b',   // Orange
                 'Chat': '#8b5cf6',     // Purple
