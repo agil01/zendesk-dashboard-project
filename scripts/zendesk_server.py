@@ -40,8 +40,77 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
             # Serve static files
             super().do_GET()
 
+    def get_ticket_sla_data(self, ticket_id):
+        """Fetch SLA metric events for a specific ticket."""
+        try:
+            base_url = f"https://{self.subdomain}.zendesk.com/api/v2"
+            metric_url = f"{base_url}/tickets/{ticket_id}/metric_events.json"
+
+            response = requests.get(
+                metric_url,
+                auth=(f"{self.email}/token", self.api_token),
+                timeout=5
+            )
+
+            if response.status_code == 200:
+                return response.json()
+            return None
+        except:
+            return None
+
+    def parse_sla_metrics(self, metric_data, ticket_status):
+        """Parse SLA metrics from metric events - prefers resolution_time, falls back to reply_time."""
+        if not metric_data:
+            return None
+
+        # Try resolution_time first (preferred)
+        for metric_type in ['resolution_time', 'reply_time']:
+            if metric_type not in metric_data:
+                continue
+
+            events = metric_data.get(metric_type, [])
+            sla_info = None
+
+            # Find the apply_sla event which contains the target
+            for event in events:
+                if event.get('type') == 'apply_sla' and 'sla' in event:
+                    sla_data = event['sla']
+                    sla_info = {
+                        'metric_type': metric_type,
+                        'target_seconds': sla_data.get('target_in_seconds', sla_data.get('target', 0) * 60),
+                        'business_hours': sla_data.get('business_hours', False),
+                        'policy_title': sla_data.get('policy', {}).get('title', 'Unknown'),
+                        'policy_id': sla_data.get('policy', {}).get('id')
+                    }
+                    break
+
+            # If we found SLA info, check for breach and fulfillment
+            if sla_info:
+                fulfilled = False
+                breach_time = None
+
+                for event in events:
+                    if event.get('type') == 'fulfill':
+                        fulfilled = True
+                    elif event.get('type') == 'breach':
+                        breach_time = event.get('time')
+
+                sla_info['fulfilled'] = fulfilled
+                sla_info['breached'] = breach_time is not None
+                sla_info['breach_time'] = breach_time
+
+                # If we found resolution_time SLA, use it and stop
+                if metric_type == 'resolution_time':
+                    return sla_info
+
+                # If reply_time and ticket is open, we can still use it
+                if metric_type == 'reply_time':
+                    return sla_info
+
+        return None
+
     def handle_api_request(self):
-        """Proxy API requests to Zendesk."""
+        """Proxy API requests to Zendesk with SLA enrichment."""
         try:
             # Get today's tickets
             today = datetime.now(timezone.utc).date()
@@ -53,8 +122,7 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
             params = {
                 'query': f'type:ticket created>={today_iso}',
                 'sort_by': 'created_at',
-                'sort_order': 'desc',
-                'include': 'slas'
+                'sort_order': 'desc'
             }
 
             response = requests.get(
@@ -67,6 +135,15 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
             if response.status_code == 200:
                 data = response.json()
                 tickets = data.get('results', [])
+
+                # Enrich first 50 tickets with SLA data (to avoid too many API calls)
+                for ticket in tickets[:50]:
+                    ticket_id = ticket.get('id')
+                    if ticket_id:
+                        sla_data = self.get_ticket_sla_data(ticket_id)
+                        if sla_data:
+                            sla_metrics = self.parse_sla_metrics(sla_data, ticket.get('status'))
+                            ticket['sla_metrics'] = sla_metrics
 
                 # Send JSON response
                 self.send_response(200)
@@ -667,61 +744,89 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
             return AGENT_NAMES[agentId] || `Agent ID: ${agentId}`;
         }
 
-        // SLA calculation based on priority and status
+        // SLA calculation using Zendesk SLA metrics (resolution_time or reply_time)
         function getSLAStatus(ticket) {
             const now = new Date();
             const created = new Date(ticket.created_at);
             const ageMinutes = (now - created) / (1000 * 60);
 
-            // If ticket is already solved/closed, no SLA concern
+            // Check if ticket has actual SLA data from Zendesk
+            const slaMetrics = ticket.sla_metrics;
+
+            // If ticket is already solved/closed
             if (['solved', 'closed'].includes(ticket.status)) {
-                return { status: 'ok', label: 'Met', remaining: null };
+                if (slaMetrics) {
+                    // Check if SLA was breached before resolution
+                    if (slaMetrics.breached) {
+                        return {
+                            status: 'breach',
+                            label: 'Breached',
+                            remaining: null,
+                            fulfilled: slaMetrics.fulfilled,
+                            metricType: slaMetrics.metric_type
+                        };
+                    } else {
+                        return {
+                            status: 'ok',
+                            label: 'Met',
+                            remaining: null,
+                            fulfilled: slaMetrics.fulfilled,
+                            metricType: slaMetrics.metric_type
+                        };
+                    }
+                }
+                return { status: 'ok', label: 'Resolved', remaining: null };
             }
 
-            // SLA targets (in minutes)
-            let slaTarget;
-            switch(ticket.priority) {
-                case 'urgent':
-                    slaTarget = 60; // 1 hour
-                    break;
-                case 'high':
-                    slaTarget = 240; // 4 hours
-                    break;
-                case 'normal':
-                    slaTarget = 480; // 8 hours
-                    break;
-                case 'low':
-                    slaTarget = 1440; // 24 hours
-                    break;
-                default:
-                    slaTarget = 480; // 8 hours default
+            // For open tickets, use actual SLA target from Zendesk
+            if (slaMetrics && slaMetrics.target_seconds) {
+                const slaTargetMinutes = slaMetrics.target_seconds / 60;
+                const remaining = slaTargetMinutes - ageMinutes;
+                const percentRemaining = (remaining / slaTargetMinutes) * 100;
+
+                const metricLabel = slaMetrics.metric_type === 'resolution_time' ? 'Resolution' : 'Reply';
+
+                // Already breached
+                if (slaMetrics.breached || remaining <= 0) {
+                    return {
+                        status: 'breach',
+                        label: 'Breached',
+                        remaining: Math.abs(remaining),
+                        overdue: true,
+                        policy: slaMetrics.policy_title,
+                        metricType: metricLabel
+                    };
+                }
+                // At risk (less than 25% time remaining)
+                else if (percentRemaining <= 25) {
+                    return {
+                        status: 'warning',
+                        label: 'At Risk',
+                        remaining: remaining,
+                        overdue: false,
+                        policy: slaMetrics.policy_title,
+                        metricType: metricLabel
+                    };
+                }
+                // On track
+                else {
+                    return {
+                        status: 'ok',
+                        label: 'On Track',
+                        remaining: remaining,
+                        overdue: false,
+                        policy: slaMetrics.policy_title,
+                        metricType: metricLabel
+                    };
+                }
             }
 
-            const remaining = slaTarget - ageMinutes;
-            const percentRemaining = (remaining / slaTarget) * 100;
-
-            if (remaining <= 0) {
-                return {
-                    status: 'breach',
-                    label: 'Breached',
-                    remaining: Math.abs(remaining),
-                    overdue: true
-                };
-            } else if (percentRemaining <= 25) {
-                return {
-                    status: 'warning',
-                    label: 'At Risk',
-                    remaining: remaining,
-                    overdue: false
-                };
-            } else {
-                return {
-                    status: 'ok',
-                    label: 'On Track',
-                    remaining: remaining,
-                    overdue: false
-                };
-            }
+            // Fallback: No SLA data available
+            return {
+                status: 'none',
+                label: 'No SLA',
+                remaining: null
+            };
         }
 
         function formatSLATime(minutes) {
@@ -740,7 +845,18 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
                 ? (sla.overdue ? `+${formatSLATime(sla.remaining)}` : formatSLATime(sla.remaining))
                 : '';
 
-            return `<span class="sla-badge sla-${sla.status}">${sla.label}${timeText ? ` (${timeText})` : ''}</span>`;
+            let badgeText = sla.label;
+            if (timeText) {
+                badgeText += ` (${timeText})`;
+            }
+
+            // Add policy name and metric type as tooltip if available
+            let tooltipParts = [];
+            if (sla.policy) tooltipParts.push(`Policy: ${sla.policy}`);
+            if (sla.metricType) tooltipParts.push(`Metric: ${sla.metricType}`);
+            const titleAttr = tooltipParts.length > 0 ? `title="${tooltipParts.join(', ')}"` : '';
+
+            return `<span class="sla-badge sla-${sla.status}" ${titleAttr}>${badgeText}</span>`;
         }
 
         let refreshTimer = null;
@@ -793,13 +909,17 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
                 stats[status] = (stats[status] || 0) + 1;
 
                 // Calculate SLA status for open tickets
+                // Only count resolution_time SLA breaches, not reply_time
                 if (!['solved', 'closed'].includes(status)) {
                     const sla = getSLAStatus(ticket);
-                    if (sla.status === 'breach') {
+                    const slaMetrics = ticket.sla_metrics;
+                    const isResolutionSLA = slaMetrics && slaMetrics.metric_type === 'resolution_time';
+
+                    if (sla.status === 'breach' && isResolutionSLA) {
                         stats.sla.breached++;
-                    } else if (sla.status === 'warning') {
+                    } else if (sla.status === 'warning' && isResolutionSLA) {
                         stats.sla.atRisk++;
-                    } else {
+                    } else if (isResolutionSLA) {
                         stats.sla.onTrack++;
                     }
                 }
@@ -892,19 +1012,19 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
                 </div>
 
                 <div class="section">
-                    <div class="section-title">⏱️ SLA Status</div>
+                    <div class="section-title">⏱️ SLA Status (Resolution Time)</div>
                     <div class="grid" style="grid-template-columns: repeat(3, 1fr);">
-                        <div class="card clickable" onclick="showFilteredTickets(t => !['solved', 'closed'].includes(t.status) && getSLAStatus(t).status === 'breach', '🚨 SLA Breached Tickets')">
+                        <div class="card clickable" onclick="showFilteredTickets(t => !['solved', 'closed'].includes(t.status) && t.sla_metrics && t.sla_metrics.metric_type === 'resolution_time' && getSLAStatus(t).status === 'breach', '🚨 SLA Breached Tickets (Resolution Time)')">
                             <div class="card-header" style="color: #ef4444;">🚨 Breached</div>
                             <div class="card-value" style="color: #ef4444;">${stats.sla.breached}</div>
                             <div class="card-label">Past due</div>
                         </div>
-                        <div class="card clickable" onclick="showFilteredTickets(t => !['solved', 'closed'].includes(t.status) && getSLAStatus(t).status === 'warning', '⚠️ SLA At Risk Tickets')">
+                        <div class="card clickable" onclick="showFilteredTickets(t => !['solved', 'closed'].includes(t.status) && t.sla_metrics && t.sla_metrics.metric_type === 'resolution_time' && getSLAStatus(t).status === 'warning', '⚠️ SLA At Risk Tickets (Resolution Time)')">
                             <div class="card-header" style="color: #f59e0b;">⚠️ At Risk</div>
                             <div class="card-value" style="color: #f59e0b;">${stats.sla.atRisk}</div>
                             <div class="card-label">< 25% time left</div>
                         </div>
-                        <div class="card clickable" onclick="showFilteredTickets(t => !['solved', 'closed'].includes(t.status) && getSLAStatus(t).status === 'ok', '✅ SLA On Track Tickets')">
+                        <div class="card clickable" onclick="showFilteredTickets(t => !['solved', 'closed'].includes(t.status) && t.sla_metrics && t.sla_metrics.metric_type === 'resolution_time' && getSLAStatus(t).status === 'ok', '✅ SLA On Track Tickets (Resolution Time)')">
                             <div class="card-header" style="color: #22c55e;">✅ On Track</div>
                             <div class="card-value" style="color: #22c55e;">${stats.sla.onTrack}</div>
                             <div class="card-label">Good standing</div>
