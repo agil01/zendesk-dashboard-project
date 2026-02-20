@@ -1026,6 +1026,13 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
                 </div>
 
                 <div class="section">
+                    <div class="section-title">📨 Tickets by Channel</div>
+                    <div style="background: #1e293b; padding: 20px; border-radius: 12px; border: 1px solid #334155;">
+                        <canvas id="ticketsByChannelChart" style="max-height: 300px;"></canvas>
+                    </div>
+                </div>
+
+                <div class="section">
                     <div class="section-title">⏱️ SLA Status (Resolution Time)</div>
                     <div class="grid" style="grid-template-columns: repeat(3, 1fr);">
                         <div class="card clickable" onclick="showFilteredTickets(t => !['solved', 'closed'].includes(t.status) && t.sla_metrics && t.sla_metrics.metric_type === 'resolution_time' && getSLAStatus(t).status === 'breach', '🚨 SLA Breached Tickets (Resolution Time)')">
@@ -1124,11 +1131,15 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
 
             document.getElementById('content').innerHTML = html;
 
-            // Render the chart after DOM update
-            setTimeout(() => renderTicketsByHourChart(tickets), 100);
+            // Render the charts after DOM update
+            setTimeout(() => {
+                renderTicketsByHourChart(tickets);
+                renderTicketsByChannelChart(tickets);
+            }, 100);
         }
 
         let ticketsByHourChartInstance = null;
+        let ticketsByChannelChartInstance = null;
 
         function renderTicketsByHourChart(tickets) {
             const ctx = document.getElementById('ticketsByHourChart');
@@ -1244,6 +1255,114 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
                                 color: '#94a3b8',
                                 font: {
                                     size: 12
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderTicketsByChannelChart(tickets) {
+            const ctx = document.getElementById('ticketsByChannelChart');
+            if (!ctx) return;
+
+            // Process tickets by channel
+            const channelCounts = {};
+
+            tickets.forEach(ticket => {
+                // Get channel from via object
+                const channel = ticket.via?.channel || 'unknown';
+                const channelName = channel.charAt(0).toUpperCase() + channel.slice(1);
+                channelCounts[channelName] = (channelCounts[channelName] || 0) + 1;
+            });
+
+            // Sort channels by count (descending)
+            const sortedChannels = Object.entries(channelCounts)
+                .sort((a, b) => b[1] - a[1]);
+
+            const channelLabels = sortedChannels.map(([channel]) => channel);
+            const channelData = sortedChannels.map(([, count]) => count);
+
+            // Color palette for channels
+            const channelColors = {
+                'Api': '#3b82f6',      // Blue
+                'Email': '#ef4444',    // Red
+                'Web': '#22c55e',      // Green
+                'Mobile': '#f59e0b',   // Orange
+                'Chat': '#8b5cf6',     // Purple
+                'Unknown': '#64748b'   // Gray
+            };
+
+            const backgroundColors = channelLabels.map(label => channelColors[label] || '#94a3b8');
+            const borderColors = backgroundColors.map(color => color);
+
+            // Destroy previous chart instance if it exists
+            if (ticketsByChannelChartInstance) {
+                ticketsByChannelChartInstance.destroy();
+            }
+
+            // Create new chart
+            ticketsByChannelChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: channelLabels,
+                    datasets: [{
+                        label: 'Tickets by Channel',
+                        data: channelData,
+                        backgroundColor: backgroundColors,
+                        borderColor: borderColors,
+                        borderWidth: 2,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'right',
+                            labels: {
+                                color: '#e2e8f0',
+                                font: {
+                                    size: 14,
+                                    weight: 600
+                                },
+                                padding: 15,
+                                generateLabels: function(chart) {
+                                    const data = chart.data;
+                                    if (data.labels.length && data.datasets.length) {
+                                        return data.labels.map((label, i) => {
+                                            const value = data.datasets[0].data[i];
+                                            const total = data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                            const percentage = ((value / total) * 100).toFixed(1);
+                                            return {
+                                                text: `${label}: ${value} (${percentage}%)`,
+                                                fillStyle: data.datasets[0].backgroundColor[i],
+                                                hidden: false,
+                                                index: i
+                                            };
+                                        });
+                                    }
+                                    return [];
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            titleColor: '#e2e8f0',
+                            bodyColor: '#cbd5e1',
+                            borderColor: '#334155',
+                            borderWidth: 1,
+                            padding: 12,
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: ${value} tickets (${percentage}%)`;
                                 }
                             }
                         }
