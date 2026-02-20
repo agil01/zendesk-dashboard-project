@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.1.0] - 2026-02-20
+
+### Added
+
+#### Dashboard Enhancements
+- **Tickets by Channel Chart**: New doughnut chart visualizing ticket distribution by source channel
+  - Channel breakdown: API, Email, Web, Mobile, Chat
+  - Color-coded visualization (API: blue, Email: red, Web: green, Mobile: orange, Chat: purple)
+  - Interactive legend with ticket counts and percentages
+  - Auto-refresh with dashboard updates
+  - Integrated seamlessly into existing dashboard layout
+
+### Changed
+- Enhanced chart rendering with dual chart support (Hour + Channel)
+- Updated dashboard layout to include channel analytics section
+
+---
+
 ## [2.0.0] - 2026-02-20
 
 ### Added - MCP Integration 🚀
@@ -149,10 +167,21 @@ After:  User → Tools → [MCP or API] → Zendesk API
 
 ## Version History
 
+- **2.1.0** (2026-02-20) - Tickets by Channel Chart
 - **2.0.0** (2026-02-20) - MCP Integration
 - **1.0.0** (2026-02-19) - Initial Release
 
 ## Upgrade Path
+
+### From 2.0.0 to 2.1.0
+```bash
+cd ~/zendesk-dashboard-project
+git pull
+# Restart dashboard to see new channel chart
+./scripts/start-dashboard.sh
+```
+
+**Impact**: Zero - all existing functionality preserved, new chart added automatically
 
 ### From 1.0.0 to 2.0.0
 ```bash
@@ -176,6 +205,6 @@ For issues, questions, or feature requests:
 
 ---
 
-**Current Version**: 2.0.0  
-**Last Updated**: 2026-02-20  
+**Current Version**: 2.1.0
+**Last Updated**: 2026-02-20
 **Status**: Production Ready

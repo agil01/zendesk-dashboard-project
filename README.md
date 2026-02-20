@@ -34,9 +34,11 @@ This project provides multiple interfaces for monitoring Zendesk tickets:
 
 - **🤖 AI Integration**: Natural language Zendesk queries via Claude Code MCP
 - **Real-time Monitoring**: Auto-refreshing dashboards (configurable intervals)
+- **Visual Analytics**: Interactive charts showing ticket trends by hour and channel distribution
 - **Visual Alerts**: Instant notifications for new urgent tickets
 - **Priority Tracking**: Color-coded priority levels (Urgent, High, Normal, Low)
 - **Status Analytics**: Track resolution rates and ticket status
+- **Channel Insights**: Visualize ticket sources (API, Email, Web, Mobile, Chat)
 - **Executive Reporting**: Professional print-ready reports
 - **Multi-Interface**: MCP, web, terminal, and document outputs
 - **Easy Sharing**: Share with team members via local network
@@ -111,6 +113,9 @@ Real-time web interface with professional UI.
 **Features:**
 - Auto-refresh every 30 seconds (configurable)
 - Visual metrics cards
+- Interactive charts:
+  - Tickets by Hour of Day (line chart)
+  - Tickets by Channel (doughnut chart with API, Email, Web, etc.)
 - Active urgent tickets list
 - Clickable links to Zendesk
 - Pause/resume controls
