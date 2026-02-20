@@ -1332,7 +1332,7 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
                             display: true,
                             position: 'right',
                             labels: {
-                                color: '#e2e8f0',
+                                color: '#ffffff',
                                 font: {
                                     size: 14,
                                     weight: 600
@@ -1348,6 +1348,8 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
                                             return {
                                                 text: `${label}: ${value} (${percentage}%)`,
                                                 fillStyle: data.datasets[0].backgroundColor[i],
+                                                strokeStyle: data.datasets[0].borderColor[i],
+                                                fontColor: '#ffffff',
                                                 hidden: false,
                                                 index: i
                                             };
