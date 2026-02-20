@@ -855,6 +855,14 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
 
         function renderSLABadge(ticket) {
             const sla = getSLAStatus(ticket);
+
+            // Only show "breach" status for resolution_time SLA breaches
+            // Hide breach badges for reply_time or other non-resolution SLA types
+            if (sla.status === 'breach' && sla.metricType !== 'Resolution') {
+                // Don't show breach badge for non-resolution SLAs (e.g., reply_time)
+                return '';
+            }
+
             const timeText = sla.remaining !== null
                 ? (sla.overdue ? `+${formatSLATime(sla.remaining)}` : formatSLATime(sla.remaining))
                 : '';
