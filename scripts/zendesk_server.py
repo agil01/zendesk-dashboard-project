@@ -9,7 +9,8 @@ import json
 import requests
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
-from datetime import datetime, timezone
+from datetime import datetime, timezone, time, timedelta
+from zoneinfo import ZoneInfo
 
 
 class ZendeskProxyHandler(SimpleHTTPRequestHandler):
@@ -112,15 +113,27 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
     def handle_api_request(self):
         """Proxy API requests to Zendesk with SLA enrichment."""
         try:
-            # Get today's tickets
-            today = datetime.now(timezone.utc).date()
-            today_start = datetime.combine(today, datetime.min.time()).replace(tzinfo=timezone.utc)
-            today_iso = today_start.isoformat()
+            # Get today's tickets in CST timezone (12:01 AM CST to 11:59 PM CST)
+            cst = ZoneInfo("America/Chicago")
+            now_cst = datetime.now(cst)
+
+            # Start at 12:01 AM CST today
+            today_start = datetime.combine(now_cst.date(), time(0, 1), tzinfo=cst)
+
+            # End at 11:59 PM CST today
+            today_end = datetime.combine(now_cst.date(), time(23, 59, 59), tzinfo=cst)
+
+            # Convert to UTC for Zendesk API
+            today_start_utc = today_start.astimezone(timezone.utc)
+            today_end_utc = today_end.astimezone(timezone.utc)
+
+            today_start_iso = today_start_utc.isoformat()
+            today_end_iso = today_end_utc.isoformat()
 
             base_url = f"https://{self.subdomain}.zendesk.com/api/v2"
             search_url = f"{base_url}/search.json"
             params = {
-                'query': f'type:ticket created>={today_iso}',
+                'query': f'type:ticket created>={today_start_iso} created<={today_end_iso}',
                 'sort_by': 'created_at',
                 'sort_order': 'desc'
             }
@@ -684,7 +697,8 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
             <span class="status-indicator status-live"></span>
             <span id="status">Live</span> |
             Last update: <span id="lastUpdate">Loading...</span> |
-            Auto-refresh: <span id="refreshInterval">30s</span>
+            Auto-refresh: <span id="refreshInterval">30s</span> |
+            Timezone: CST
         </div>
     </div>
 
@@ -966,7 +980,7 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
                     <div class="card clickable" onclick="showFilteredTickets(() => true, '📊 All Tickets Today')">
                         <div class="card-header">Total Tickets Today</div>
                         <div class="card-value">${stats.total}</div>
-                        <div class="card-label">Last 24 hours</div>
+                        <div class="card-label">Today (CST)</div>
                     </div>
                     <div class="card clickable" onclick="showFilteredTickets(t => ['solved', 'closed'].includes(t.status), '✅ Resolved Tickets')">
                         <div class="card-header">Resolution Rate</div>
