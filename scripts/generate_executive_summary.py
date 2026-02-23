@@ -96,6 +96,7 @@ def analyze_tickets(tickets, metrics_data):
         'brand_dist': Counter(),
         'agent_dist': Counter(),
         'type_dist': Counter(),
+        'status_by_brand': defaultdict(Counter),
         'reply_times': [],
         'resolution_times': [],
         'one_touch': 0,
@@ -121,9 +122,15 @@ def analyze_tickets(tickets, metrics_data):
         desc = ticket.get('description', '').lower()
 
         if 'clover_health' in tags or 'clover' in str(tags).lower() or 'clover' in subject or 'clover' in desc:
+            brand = 'Clover Health'
             analysis['brand_dist']['Clover Health'] += 1
         else:
+            brand = 'Counterpart Health'
             analysis['brand_dist']['Counterpart Health'] += 1
+
+        # Status by brand
+        status = ticket.get('status', 'unknown')
+        analysis['status_by_brand'][brand][status] += 1
 
         # Agent
         assignee_id = ticket.get('assignee_id')
@@ -166,6 +173,8 @@ def generate_html_report(analysis, start_date, end_date, output_path):
         'channel_distribution': dict(analysis['channel_dist']),
         'brand_distribution': dict(analysis['brand_dist']),
         'agent_distribution': dict(analysis['agent_dist']),
+        'type_distribution': dict(analysis['type_dist']),
+        'status_by_brand': {brand: dict(statuses) for brand, statuses in analysis['status_by_brand'].items()},
         'avg_reply_time_minutes': round(analysis['avg_reply_time_minutes'], 2),
         'avg_reply_time_hours': round(analysis['avg_reply_time_minutes'] / 60, 2),
         'avg_resolution_time_minutes': round(analysis['avg_resolution_time_minutes'], 2),
@@ -389,6 +398,30 @@ def generate_html_report(analysis, start_date, end_date, output_path):
         pct = (count / data['total_tickets'] * 100) if data['total_tickets'] > 0 else 0
         html_content += f"""        <div class="metric-row">
             <span>{channel.capitalize()}</span>
+            <span>{count} ({pct:.1f}%)</span>
+        </div>
+"""
+
+    # Issue Types
+    html_content += "        <h3>Issue Types</h3>\n"
+    for issue_type, count in sorted(data['type_distribution'].items(), key=lambda x: x[1], reverse=True):
+        pct = (count / data['total_tickets'] * 100) if data['total_tickets'] > 0 else 0
+        html_content += f"""        <div class="metric-row">
+            <span>{issue_type.capitalize()}</span>
+            <span>{count} ({pct:.1f}%)</span>
+        </div>
+"""
+
+    # Status by Brand
+    html_content += "        <h3>Status by Brand</h3>\n"
+    for brand in sorted(data['status_by_brand'].keys()):
+        html_content += f"        <h4 style='margin-top: 20px; color: #374151;'>{brand}</h4>\n"
+        brand_statuses = data['status_by_brand'][brand]
+        brand_total = sum(brand_statuses.values())
+        for status, count in sorted(brand_statuses.items(), key=lambda x: x[1], reverse=True):
+            pct = (count / brand_total * 100) if brand_total > 0 else 0
+            html_content += f"""        <div class="metric-row">
+            <span>{status.capitalize()}</span>
             <span>{count} ({pct:.1f}%)</span>
         </div>
 """
