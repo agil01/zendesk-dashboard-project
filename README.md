@@ -182,6 +182,65 @@ python3 scripts/zendesk_daily_summary.py
 
 ---
 
+### 5. **Weekly Agent Reports** (`generate_weekly_reports.py`)
+
+Automated weekly reports for individual agents and team comparative analysis.
+
+**Features:**
+- Individual agent reports (Candice, Ron, Bola)
+- Team comparative summary with workload distribution
+- Visual bar charts comparing agent ticket loads
+- Automated insights and recommendations
+- Priority actions based on team metrics
+- Scheduled automation via cron (Monday 8:00 AM CST)
+
+**Usage:**
+```bash
+# Generate reports now
+python3 scripts/generate_weekly_reports.py
+
+# Setup automated Monday delivery
+./scripts/setup_weekly_reports.sh
+```
+
+**Output:** 4 HTML reports in `~/Desktop/Weekly_Zendesk_Reports/`
+- 3 individual agent reports
+- 1 team comparative summary
+
+**Documentation:** See [WEEKLY_REPORTS_SETUP.md](WEEKLY_REPORTS_SETUP.md)
+
+---
+
+### 6. **Executive Summary Generator** (`generate_executive_summary.py`)
+
+Comprehensive executive summary reports for any date range.
+
+**Features:**
+- High-level KPIs and metrics
+- Team performance analysis
+- SLA compliance tracking
+- Brand distribution (Clover Health vs Counterpart Health)
+- Channel analysis
+- One-touch resolution metrics
+- Automated insights and trends
+- Strategic recommendations
+- Print-ready HTML format
+
+**Usage:**
+```bash
+# Generate for specific date range
+python3 scripts/generate_executive_summary.py 2026-02-16 2026-02-22
+
+# Generate for last week (automatic)
+python3 scripts/generate_executive_summary.py
+```
+
+**Output:** HTML report in `~/Desktop/Claude Files/`
+
+**Documentation:** See [EXECUTIVE_SUMMARY.md](EXECUTIVE_SUMMARY.md)
+
+---
+
 ## Installation
 
 ### Prerequisites
