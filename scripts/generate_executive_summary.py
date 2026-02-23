@@ -99,6 +99,10 @@ def analyze_tickets(tickets, metrics_data):
         'status_by_brand': defaultdict(Counter),
         'reply_times': [],
         'resolution_times': [],
+        'resolution_by_priority': defaultdict(list),
+        'sla_breaches': 0,
+        'sla_met': 0,
+        'resolution_ranges': Counter(),
         'one_touch': 0,
         'multi_touch': 0,
     }
@@ -140,14 +144,49 @@ def analyze_tickets(tickets, metrics_data):
             analysis['agent_dist']['Other/Unassigned'] += 1
 
     # Process metrics
+    # Create ticket priority map for SLA tracking
+    ticket_priority_map = {t['id']: t.get('priority', 'normal') for t in tickets}
+
     for metric in metrics_data:
+        ticket_id = metric.get('ticket_id')
+        priority = ticket_priority_map.get(ticket_id, 'normal')
+
         # Reply time
         if metric.get('reply_time_in_minutes', {}).get('business'):
             analysis['reply_times'].append(metric['reply_time_in_minutes']['business'])
 
         # Resolution time
         if metric.get('first_resolution_time_in_minutes', {}).get('business'):
-            analysis['resolution_times'].append(metric['first_resolution_time_in_minutes']['business'])
+            resolution_time = metric['first_resolution_time_in_minutes']['business']
+            analysis['resolution_times'].append(resolution_time)
+            analysis['resolution_by_priority'][priority].append(resolution_time)
+
+            # SLA targets (in minutes): Urgent: 240 (4hrs), High: 480 (8hrs), Normal: 1440 (24hrs), Low: 2880 (48hrs)
+            sla_targets = {
+                'urgent': 240,
+                'high': 480,
+                'normal': 1440,
+                'low': 2880
+            }
+
+            target = sla_targets.get(priority, 1440)
+            if resolution_time <= target:
+                analysis['sla_met'] += 1
+            else:
+                analysis['sla_breaches'] += 1
+
+            # Categorize resolution time ranges
+            resolution_hours = resolution_time / 60
+            if resolution_hours <= 4:
+                analysis['resolution_ranges']['0-4 hours'] += 1
+            elif resolution_hours <= 8:
+                analysis['resolution_ranges']['4-8 hours'] += 1
+            elif resolution_hours <= 24:
+                analysis['resolution_ranges']['8-24 hours'] += 1
+            elif resolution_hours <= 48:
+                analysis['resolution_ranges']['24-48 hours'] += 1
+            else:
+                analysis['resolution_ranges']['48+ hours'] += 1
 
         # One touch resolution
         if metric.get('replies', 0) <= 1:
@@ -165,6 +204,21 @@ def analyze_tickets(tickets, metrics_data):
 def generate_html_report(analysis, start_date, end_date, output_path):
     """Generate HTML executive summary report."""
 
+    # Calculate SLA metrics
+    total_sla_tracked = analysis['sla_met'] + analysis['sla_breaches']
+    sla_compliance_rate = (analysis['sla_met'] / total_sla_tracked * 100) if total_sla_tracked > 0 else 0
+
+    # Calculate avg resolution by priority
+    resolution_by_priority_avg = {}
+    for priority, times in analysis['resolution_by_priority'].items():
+        if times:
+            avg_minutes = sum(times) / len(times)
+            resolution_by_priority_avg[priority] = {
+                'minutes': round(avg_minutes, 2),
+                'hours': round(avg_minutes / 60, 2),
+                'count': len(times)
+            }
+
     data = {
         'total_tickets': analysis['total_tickets'],
         'date_range': f'{start_date} to {end_date}',
@@ -181,7 +235,13 @@ def generate_html_report(analysis, start_date, end_date, output_path):
         'avg_resolution_time_hours': round(analysis['avg_resolution_time_minutes'] / 60, 2),
         'one_touch_resolutions': analysis['one_touch'],
         'multi_touch_resolutions': analysis['multi_touch'],
-        'one_touch_percentage': round((analysis['one_touch'] / max(1, analysis['one_touch'] + analysis['multi_touch'])) * 100, 1) if (analysis['one_touch'] + analysis['multi_touch']) > 0 else 0
+        'one_touch_percentage': round((analysis['one_touch'] / max(1, analysis['one_touch'] + analysis['multi_touch'])) * 100, 1) if (analysis['one_touch'] + analysis['multi_touch']) > 0 else 0,
+        'sla_met': analysis['sla_met'],
+        'sla_breaches': analysis['sla_breaches'],
+        'sla_compliance_rate': round(sla_compliance_rate, 1),
+        'total_sla_tracked': total_sla_tracked,
+        'resolution_ranges': dict(analysis['resolution_ranges']),
+        'resolution_by_priority': resolution_by_priority_avg
     }
 
     resolved_count = data['status_distribution'].get('solved', 0) + data['status_distribution'].get('closed', 0)
@@ -424,6 +484,90 @@ def generate_html_report(analysis, start_date, end_date, output_path):
             <span>{status.capitalize()}</span>
             <span>{count} ({pct:.1f}%)</span>
         </div>
+"""
+
+
+    # SLA Metrics by Resolution Time
+    html_content += """
+        <h3>SLA Metrics by Resolution Time</h3>
+        <div class="stats-grid" style="margin: 20px 0;">
+            <div class="stat-card">
+                <div class="stat-value" style="color: #16a34a;">{sla_met}</div>
+                <div class="stat-label">SLA Met</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" style="color: #dc2626;">{sla_breaches}</div>
+                <div class="stat-label">SLA Breached</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{sla_compliance_rate:.1f}%</div>
+                <div class="stat-label">Compliance Rate</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{total_sla_tracked}</div>
+                <div class="stat-label">Total Tracked</div>
+            </div>
+        </div>
+""".format(
+        sla_met=data['sla_met'],
+        sla_breaches=data['sla_breaches'],
+        sla_compliance_rate=data['sla_compliance_rate'],
+        total_sla_tracked=data['total_sla_tracked']
+    )
+
+    # Resolution Time Ranges
+    html_content += "        <h4 style='margin-top: 20px; color: #374151;'>Resolution Time Distribution</h4>\n"
+    range_order = ['0-4 hours', '4-8 hours', '8-24 hours', '24-48 hours', '48+ hours']
+    for time_range in range_order:
+        count = data['resolution_ranges'].get(time_range, 0)
+        pct = (count / data['total_sla_tracked'] * 100) if data['total_sla_tracked'] > 0 else 0
+        html_content += f"""        <div class="metric-row">
+            <span>{time_range}</span>
+            <span>{count} ({pct:.1f}%)</span>
+        </div>
+"""
+
+    # Resolution Time by Priority
+    html_content += "        <h4 style='margin-top: 20px; color: #374151;'>Average Resolution Time by Priority</h4>\n"
+    priority_order = ['urgent', 'high', 'normal', 'low']
+    sla_targets_display = {
+        'urgent': '4 hours',
+        'high': '8 hours',
+        'normal': '24 hours',
+        'low': '48 hours'
+    }
+
+    if data['resolution_by_priority']:
+        html_content += """        <table style="margin: 10px 0;">
+            <thead>
+                <tr>
+                    <th>Priority</th>
+                    <th>Avg Resolution Time</th>
+                    <th>SLA Target</th>
+                    <th>Tickets</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+"""
+        for priority in priority_order:
+            if priority in data['resolution_by_priority']:
+                stats = data['resolution_by_priority'][priority]
+                target_hours = {'urgent': 4, 'high': 8, 'normal': 24, 'low': 48}[priority]
+                status_icon = '✅' if stats['hours'] <= target_hours else '⚠️'
+                html_content += f"""                <tr>
+                    <td>{priority.capitalize()}</td>
+                    <td>{stats['hours']:.1f} hours</td>
+                    <td>{sla_targets_display[priority]}</td>
+                    <td>{stats['count']}</td>
+                    <td style="text-align: center;">{status_icon}</td>
+                </tr>
+"""
+        html_content += """            </tbody>
+        </table>
+"""
+    else:
+        html_content += """        <p style="color: #6b7280; font-style: italic;">No resolution data available for priority breakdown.</p>
 """
 
     html_content += f"""
