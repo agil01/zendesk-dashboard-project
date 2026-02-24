@@ -733,6 +733,9 @@ def generate_html_report(tickets, analysis, start_date, end_date, output_path):
     # SLA Performance section
     html += generate_sla_section(sla_cph, sla_clover)
 
+    # Key Insights and Trends section
+    html += generate_insights_section(analysis, total, resolved, otr_overall_pct, sla_cph, sla_clover)
+
     # Status Distribution
     html += f"""
         </section>
@@ -1020,6 +1023,250 @@ def generate_sla_section(sla_cph, sla_clover):
                     </div>
                 </div>
             </div>
+"""
+
+    return html
+
+def generate_insights_section(analysis, total, resolved, otr_overall_pct, sla_cph, sla_clover):
+    """Generate Key Insights and Trends section."""
+
+    # Calculate insights
+    resolution_rate = (resolved / total * 100) if total > 0 else 0
+
+    # Team workload distribution
+    team_members = analysis['team_members']
+    total_assigned = sum(team_members.values())
+    team_balance = {}
+    for member, count in team_members.items():
+        pct = (count / total_assigned * 100) if total_assigned > 0 else 0
+        team_balance[member] = pct
+
+    # Check for workload imbalance (>40% or <20%)
+    workload_imbalanced = any(pct > 40 or pct < 20 for pct in team_balance.values())
+
+    # Priority analysis
+    priority_counts = analysis['priority_counts']
+    high_priority_pct = ((priority_counts.get('urgent', 0) + priority_counts.get('high', 0)) / total * 100) if total > 0 else 0
+
+    # Brand distribution
+    brand_tickets = analysis['brand_tickets']
+    clover_count = len(brand_tickets['Clover Health'])
+    cph_count = len(brand_tickets['Counterpart Health'])
+    clover_pct = (clover_count / total * 100) if total > 0 else 0
+    cph_pct = (cph_count / total * 100) if total > 0 else 0
+
+    # Issue type insights
+    issue_types = analysis['issue_types']
+    top_issue_type = max(issue_types.items(), key=lambda x: x[1]) if issue_types else ('None', 0)
+    top_issue_pct = (top_issue_type[1] / total * 100) if total > 0 else 0
+
+    # SLA performance insights
+    sla_issues = []
+    for brand, brand_name in [(sla_cph, 'Counterpart Health'), (sla_clover, 'Clover Health')]:
+        for priority in ['urgent', 'high', 'normal', 'low']:
+            sla_data = brand.get(priority, {})
+            if sla_data.get('count', 0) > 0:
+                avg = sla_data['average']
+                targets = {'urgent': 6, 'high': 16, 'normal': 22, 'low': 23}
+                if avg > targets.get(priority, 999):
+                    sla_issues.append(f"{brand_name} {priority.capitalize()} priority")
+
+    html = """
+        <section style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 12px; margin: 30px 0;">
+            <h2 style="color: white; border-bottom: 2px solid rgba(255,255,255,0.3); padding-bottom: 15px; margin-bottom: 20px;">
+                💡 Key Insights & Trends
+            </h2>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+"""
+
+    # Volume & Performance Insights
+    html += """
+                <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 8px; backdrop-filter: blur(10px);">
+                    <h3 style="color: white; margin: 0 0 15px 0; font-size: 16px; display: flex; align-items: center;">
+                        <span style="font-size: 24px; margin-right: 10px;">📊</span>
+                        Volume & Performance
+                    </h3>
+                    <ul style="margin: 0; padding-left: 20px; line-height: 1.8;">
+"""
+
+    # Ticket volume insight
+    if total >= 50:
+        volume_status = "High"
+        volume_color = "#fbbf24"
+    elif total >= 30:
+        volume_status = "Moderate"
+        volume_color = "#60a5fa"
+    else:
+        volume_status = "Low"
+        volume_color = "#34d399"
+
+    html += f"""                        <li><strong style="color: {volume_color};">{volume_status} ticket volume</strong> with {total} tickets during the reporting period.</li>
+"""
+
+    # Resolution rate insight
+    if resolution_rate >= 90:
+        res_status = "Excellent"
+        res_color = "#34d399"
+    elif resolution_rate >= 80:
+        res_status = "Good"
+        res_color = "#60a5fa"
+    else:
+        res_status = "Needs improvement"
+        res_color = "#fbbf24"
+
+    html += f"""                        <li><strong style="color: {res_color};">{res_status} resolution rate</strong> at {resolution_rate:.1f}% ({resolved} of {total} tickets resolved).</li>
+"""
+
+    # OTR insight
+    if otr_overall_pct >= 80:
+        otr_status = "Strong"
+        otr_color = "#34d399"
+        otr_action = "maintaining efficient first-contact resolution"
+    elif otr_overall_pct >= 60:
+        otr_status = "Moderate"
+        otr_color = "#60a5fa"
+        otr_action = "opportunity to improve first-contact resolution"
+    else:
+        otr_status = "Low"
+        otr_color = "#fbbf24"
+        otr_action = "focus needed on reducing multi-touch tickets"
+
+    html += f"""                        <li><strong style="color: {otr_color};">{otr_status} one-touch resolution</strong> at {otr_overall_pct:.1f}%, {otr_action}.</li>
+"""
+
+    html += """                    </ul>
+                </div>
+"""
+
+    # Team & Workload Insights
+    html += """
+                <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 8px; backdrop-filter: blur(10px);">
+                    <h3 style="color: white; margin: 0 0 15px 0; font-size: 16px; display: flex; align-items: center;">
+                        <span style="font-size: 24px; margin-right: 10px;">👥</span>
+                        Team & Workload
+                    </h3>
+                    <ul style="margin: 0; padding-left: 20px; line-height: 1.8;">
+"""
+
+    # Team balance insight
+    if workload_imbalanced:
+        balance_status = "Imbalanced"
+        balance_color = "#fbbf24"
+        balance_action = "Review ticket assignment for more even distribution"
+    else:
+        balance_status = "Well-balanced"
+        balance_color = "#34d399"
+        balance_action = "Team workload is evenly distributed"
+
+    html += f"""                        <li><strong style="color: {balance_color};">{balance_status} workload distribution.</strong> {balance_action}.</li>
+"""
+
+    # Team member breakdown
+    for member, pct in sorted(team_balance.items(), key=lambda x: x[1], reverse=True):
+        count = team_members[member]
+        html += f"""                        <li>{member}: {count} tickets ({pct:.1f}%)</li>
+"""
+
+    html += """                    </ul>
+                </div>
+"""
+
+    # Priority & SLA Insights
+    html += """
+                <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 8px; backdrop-filter: blur(10px);">
+                    <h3 style="color: white; margin: 0 0 15px 0; font-size: 16px; display: flex; align-items: center;">
+                        <span style="font-size: 24px; margin-right: 10px;">⚡</span>
+                        Priority & SLA
+                    </h3>
+                    <ul style="margin: 0; padding-left: 20px; line-height: 1.8;">
+"""
+
+    # Priority distribution
+    if high_priority_pct > 25:
+        priority_status = "High"
+        priority_color = "#fbbf24"
+        priority_note = "elevated urgent/high priority workload"
+    elif high_priority_pct > 15:
+        priority_status = "Moderate"
+        priority_color = "#60a5fa"
+        priority_note = "normal urgent/high priority mix"
+    else:
+        priority_status = "Low"
+        priority_color = "#34d399"
+        priority_note = "minimal urgent/high priority tickets"
+
+    html += f"""                        <li><strong style="color: {priority_color};">{high_priority_pct:.1f}% urgent/high priority tickets</strong> - {priority_note}.</li>
+"""
+
+    # SLA performance
+    if sla_issues:
+        html += f"""                        <li><strong style="color: #fbbf24;">SLA concerns:</strong> {', '.join(sla_issues[:3])} exceeding targets.</li>
+"""
+    else:
+        html += f"""                        <li><strong style="color: #34d399;">All SLA targets met</strong> across priority categories.</li>
+"""
+
+    html += """                    </ul>
+                </div>
+"""
+
+    # Brand & Issue Type Insights
+    html += """
+                <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 8px; backdrop-filter: blur(10px);">
+                    <h3 style="color: white; margin: 0 0 15px 0; font-size: 16px; display: flex; align-items: center;">
+                        <span style="font-size: 24px; margin-right: 10px;">🏢</span>
+                        Brand & Issues
+                    </h3>
+                    <ul style="margin: 0; padding-left: 20px; line-height: 1.8;">
+"""
+
+    # Brand distribution
+    html += f"""                        <li><strong>Brand split:</strong> Clover Health {clover_pct:.1f}% ({clover_count}), Counterpart Health {cph_pct:.1f}% ({cph_count}).</li>
+"""
+
+    # Top issue type
+    html += f"""                        <li><strong>Primary issue type:</strong> {top_issue_type[0]} accounts for {top_issue_pct:.1f}% of tickets ({top_issue_type[1]} tickets).</li>
+"""
+
+    # Pending tickets warning if significant
+    pending_count = len(analysis['pending_tickets'])
+    if pending_count > 0:
+        pending_pct = (pending_count / total * 100)
+        if pending_pct > 10:
+            html += f"""                        <li><strong style="color: #fbbf24;">⚠️ {pending_count} pending tickets</strong> ({pending_pct:.1f}%) require attention.</li>
+"""
+
+    html += """                    </ul>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.15); border-radius: 8px; border-left: 4px solid #fbbf24;">
+                <p style="margin: 0; font-size: 14px; line-height: 1.6;">
+                    <strong>📌 Recommendations:</strong> """
+
+    # Generate recommendations
+    recommendations = []
+    if resolution_rate < 85:
+        recommendations.append("Focus on improving resolution rate")
+    if otr_overall_pct < 70:
+        recommendations.append("enhance first-contact resolution training")
+    if workload_imbalanced:
+        recommendations.append("rebalance ticket assignments")
+    if sla_issues:
+        recommendations.append(f"address SLA concerns in {sla_issues[0]}")
+    if pending_count > 5:
+        recommendations.append(f"prioritize {pending_count} pending tickets")
+
+    if recommendations:
+        html += ", ".join(recommendations) + "."
+    else:
+        html += "Continue current practices - performance is strong across all metrics."
+
+    html += """
+                </p>
+            </div>
+        </section>
 """
 
     return html
