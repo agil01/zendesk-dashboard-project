@@ -2007,9 +2007,9 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
                 ` : ''}
 
                 <div class="section">
-                    <div class="section-title">📈 Tickets by Hour of Day</div>
+                    <div class="section-title">📈 Tickets by Hour of Day <span style="font-size: 12px; color: #94a3b8; font-weight: 400;">(Click to drill-in)</span></div>
                     <div style="background: #1e293b; padding: 20px; border-radius: 12px; border: 1px solid #334155;">
-                        <canvas id="ticketsByHourChart" style="max-height: 300px;"></canvas>
+                        <canvas id="ticketsByHourChart" style="max-height: 300px; cursor: pointer;"></canvas>
                     </div>
                 </div>
 
@@ -2159,6 +2159,22 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
                 options: {
                     responsive: true,
                     maintainAspectRatio: true,
+                    onClick: (event, activeElements) => {
+                        if (activeElements.length > 0) {
+                            const index = activeElements[0].index;
+                            const hour24 = index; // 24-hour format (0-23)
+                            const hourLabel = hourLabels[index];
+
+                            // Filter tickets by hour
+                            const filterFn = (ticket) => {
+                                const created = new Date(ticket.created_at);
+                                return created.getHours() === hour24;
+                            };
+
+                            // Show filtered tickets modal
+                            showFilteredTickets(filterFn, `📈 Tickets Created at ${hourLabel}`);
+                        }
+                    },
                     plugins: {
                         legend: {
                             display: true,
