@@ -782,6 +782,27 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
                 0 8px 24px rgba(0, 0, 0, 0.4);
         }
 
+        .ticket-item.status-hold {
+            border-left-color: #f59e0b;
+            background: linear-gradient(135deg,
+                rgba(245, 158, 11, 0.08) 0%,
+                rgba(20, 24, 36, 0.6) 100%
+            );
+        }
+
+        .ticket-item.status-hold::before {
+            background: linear-gradient(180deg,
+                #f59e0b,
+                #d97706
+            );
+        }
+
+        .ticket-item.status-hold:hover {
+            box-shadow:
+                0 0 30px rgba(245, 158, 11, 0.3),
+                0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
         .ticket-id {
             font-family: 'JetBrains Mono', monospace;
             font-weight: 600;
@@ -1803,6 +1824,7 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
                 new: 0,
                 open: 0,
                 pending: 0,
+                hold: 0,
                 solved: 0,
                 closed: 0,
                 byAssignee: {},
@@ -1896,6 +1918,11 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
                         <div class="card-header">Open Tickets</div>
                         <div class="card-value normal">${(stats.open || 0) + (stats.new || 0) + (stats.pending || 0)}</div>
                         <div class="card-label">Requires attention</div>
+                    </div>
+                    <div class="card clickable" onclick="showFilteredTickets(t => t.status === 'hold', '⏸️ On Hold Tickets')">
+                        <div class="card-header" style="color: #f59e0b;">On Hold</div>
+                        <div class="card-value" style="color: #f59e0b;">${stats.hold || 0}</div>
+                        <div class="card-label">Awaiting response</div>
                     </div>
                 </div>
 
@@ -2072,8 +2099,18 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
                     </div>
                     ${tickets.slice(0, 10).map(ticket => {
                         const isResolved = ['solved', 'closed'].includes(ticket.status);
-                        const isUrgent = ticket.priority === 'urgent' && !isResolved;
-                        const statusClass = isResolved ? 'status-resolved' : 'status-active';
+                        const isOnHold = ticket.status === 'hold';
+                        const isUrgent = ticket.priority === 'urgent' && !isResolved && !isOnHold;
+
+                        let statusClass = '';
+                        if (isResolved) {
+                            statusClass = 'status-resolved';
+                        } else if (isOnHold) {
+                            statusClass = 'status-hold';
+                        } else {
+                            statusClass = 'status-active';
+                        }
+
                         const urgentClass = isUrgent ? 'urgent' : '';
 
                         return `
