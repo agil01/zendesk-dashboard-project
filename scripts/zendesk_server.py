@@ -218,260 +218,659 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zendesk Real-Time Dashboard</title>
+    <title>Zendesk Mission Control</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --color-bg-primary: #0a0e27;
+            --color-bg-secondary: #0f1419;
+            --color-bg-tertiary: #1a1f3a;
+            --color-bg-card: #141824;
+            --color-accent-cyan: #14f1d9;
+            --color-accent-cyan-bright: #00fff7;
+            --color-accent-purple: #8b5cf6;
+            --color-accent-purple-bright: #a78bfa;
+            --color-accent-blue: #6366f1;
+            --color-text-primary: #e8edf5;
+            --color-text-secondary: #9ca3af;
+            --color-text-muted: #6b7280;
+            --color-success: #10b981;
+            --color-warning: #f59e0b;
+            --color-error: #ef4444;
+            --color-urgent: #dc2626;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100vh); }
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% {
+                opacity: 1;
+                box-shadow: 0 0 20px currentColor, 0 0 40px currentColor;
+            }
+            50% {
+                opacity: 0.7;
+                box-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+            }
+        }
+
+        @keyframes fade-in-up {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes hologram-flicker {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.97; }
+        }
+
+        @keyframes grid-pulse {
+            0%, 100% { opacity: 0.03; }
+            50% { opacity: 0.08; }
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-            background: #0f172a;
-            color: #e2e8f0;
+            font-family: 'Rajdhani', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--color-bg-primary);
+            color: var(--color-text-primary);
             padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                linear-gradient(90deg, transparent 0%, rgba(20, 241, 217, 0.03) 50%, transparent 100%),
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(20, 241, 217, 0.03) 2px,
+                    rgba(20, 241, 217, 0.03) 4px
+                );
+            pointer-events: none;
+            z-index: 1;
+            animation: grid-pulse 4s ease-in-out infinite;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg,
+                transparent,
+                var(--color-accent-cyan),
+                transparent
+            );
+            animation: scanline 8s linear infinite;
+            pointer-events: none;
+            z-index: 2;
+            opacity: 0.3;
         }
 
         .header {
-            background: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%);
-            padding: 30px;
-            border-radius: 12px;
+            background: linear-gradient(135deg,
+                rgba(99, 102, 241, 0.15) 0%,
+                rgba(139, 92, 246, 0.15) 50%,
+                rgba(20, 241, 217, 0.15) 100%
+            );
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(20, 241, 217, 0.2);
+            padding: 40px;
+            border-radius: 16px;
             margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            box-shadow:
+                0 0 60px rgba(20, 241, 217, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                0 20px 40px rgba(0, 0, 0, 0.4);
+            position: relative;
+            z-index: 10;
+            animation: fade-in-up 0.8s ease-out;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 16px;
+            padding: 1px;
+            background: linear-gradient(135deg,
+                var(--color-accent-cyan),
+                var(--color-accent-purple),
+                var(--color-accent-blue)
+            );
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0.3;
+            animation: hologram-flicker 3s ease-in-out infinite;
         }
 
         .header h1 {
-            font-size: 28px;
-            margin-bottom: 10px;
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg,
+                var(--color-accent-cyan-bright),
+                var(--color-accent-purple-bright),
+                var(--color-accent-cyan-bright)
+            );
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 2px;
+            text-transform: uppercase;
         }
 
         .header .meta {
-            opacity: 0.9;
-            font-size: 14px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: var(--color-text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
         }
 
         .status-indicator {
             display: inline-block;
-            width: 12px;
-            height: 12px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
             margin-right: 8px;
-            animation: pulse 2s infinite;
+            position: relative;
         }
 
         .status-live {
-            background: #22c55e;
-            box-shadow: 0 0 10px #22c55e;
+            background: var(--color-accent-cyan);
+            animation: pulse-glow 2s ease-in-out infinite;
+            color: var(--color-accent-cyan);
         }
 
         .status-error {
-            background: #ef4444;
-            box-shadow: 0 0 10px #ef4444;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+            background: var(--color-error);
+            animation: pulse-glow 2s ease-in-out infinite;
+            color: var(--color-error);
         }
 
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
+            gap: 24px;
             margin-bottom: 30px;
+            position: relative;
+            z-index: 10;
         }
 
         .card {
-            background: #1e293b;
+            background: linear-gradient(135deg,
+                rgba(20, 24, 36, 0.8) 0%,
+                rgba(26, 31, 58, 0.6) 100%
+            );
+            backdrop-filter: blur(10px);
             border-radius: 12px;
-            padding: 25px;
-            border: 1px solid #334155;
-            transition: transform 0.2s, box-shadow 0.2s;
+            padding: 28px;
+            border: 1px solid rgba(20, 241, 217, 0.15);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
+            position: relative;
+            z-index: 10;
+            overflow: hidden;
+            animation: fade-in-up 0.6s ease-out backwards;
+        }
+
+        .grid .card:nth-child(1) { animation-delay: 0.1s; }
+        .grid .card:nth-child(2) { animation-delay: 0.15s; }
+        .grid .card:nth-child(3) { animation-delay: 0.2s; }
+        .grid .card:nth-child(4) { animation-delay: 0.25s; }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg,
+                transparent,
+                var(--color-accent-cyan),
+                transparent
+            );
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 12px;
+            padding: 1px;
+            background: linear-gradient(135deg,
+                var(--color-accent-cyan),
+                var(--color-accent-purple)
+            );
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.4s;
         }
 
         .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-            border-color: #60a5fa;
+            transform: translateY(-6px) scale(1.02);
+            box-shadow:
+                0 0 40px rgba(20, 241, 217, 0.3),
+                0 20px 40px rgba(0, 0, 0, 0.5);
+            border-color: var(--color-accent-cyan);
+            z-index: 20;
+        }
+
+        .card:hover::before,
+        .card:hover::after {
+            opacity: 1;
         }
 
         .card.clickable:hover::after {
-            content: "📋 Click to view tickets";
-            position: absolute;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 10px;
-            color: #60a5fa;
-            white-space: nowrap;
+            opacity: 1;
         }
 
         .card-header {
-            font-size: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
             text-transform: uppercase;
-            color: #94a3b8;
+            color: var(--color-accent-cyan);
             font-weight: 600;
-            margin-bottom: 10px;
-            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+            letter-spacing: 1.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .card-value {
-            font-size: 42px;
+            font-size: 56px;
             font-weight: 700;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            line-height: 1;
+            background: linear-gradient(135deg,
+                var(--color-text-primary),
+                var(--color-accent-cyan)
+            );
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .card-label {
             font-size: 14px;
-            color: #cbd5e1;
+            color: var(--color-text-secondary);
+            font-weight: 400;
         }
 
-        .urgent { color: #ef4444; }
-        .high { color: #f59e0b; }
-        .normal { color: #3b82f6; }
-        .low { color: #22c55e; }
+        .urgent {
+            color: var(--color-urgent);
+            text-shadow: 0 0 10px rgba(220, 38, 38, 0.5);
+        }
+        .high {
+            color: var(--color-warning);
+            text-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+        }
+        .normal {
+            color: var(--color-accent-blue);
+            text-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+        }
+        .low {
+            color: var(--color-success);
+            text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
 
         .section {
-            background: #1e293b;
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 20px;
-            border: 1px solid #334155;
+            background: linear-gradient(135deg,
+                rgba(20, 24, 36, 0.6) 0%,
+                rgba(26, 31, 58, 0.4) 100%
+            );
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(20, 241, 217, 0.1);
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg,
+                transparent,
+                var(--color-accent-purple),
+                transparent
+            );
         }
 
         .section-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 20px;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 24px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            color: var(--color-text-primary);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
         }
 
         .badge {
-            background: #ef4444;
+            background: linear-gradient(135deg,
+                var(--color-urgent),
+                #b91c1c
+            );
             color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
+            padding: 4px 12px;
+            border-radius: 16px;
             font-size: 12px;
-            font-weight: 600;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            box-shadow: 0 0 20px rgba(220, 38, 38, 0.5);
+            animation: pulse-glow 2s ease-in-out infinite;
         }
 
         .ticket-item {
-            background: #0f172a;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            border-left: 4px solid #3b82f6;
+            background: linear-gradient(135deg,
+                rgba(10, 14, 39, 0.8) 0%,
+                rgba(20, 24, 36, 0.6) 100%
+            );
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 14px;
+            border-left: 3px solid var(--color-accent-blue);
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
+            z-index: 10;
+            border: 1px solid rgba(20, 241, 217, 0.08);
+            border-left-width: 3px;
+        }
+
+        .ticket-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(180deg,
+                var(--color-accent-cyan),
+                var(--color-accent-purple)
+            );
+            opacity: 0;
+            transition: opacity 0.3s;
         }
 
         .ticket-item:hover {
-            background: #1e293b;
-            transform: translateX(5px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            background: linear-gradient(135deg,
+                rgba(20, 24, 36, 0.9) 0%,
+                rgba(26, 31, 58, 0.7) 100%
+            );
+            transform: translateX(8px);
+            box-shadow:
+                0 0 30px rgba(20, 241, 217, 0.2),
+                0 8px 24px rgba(0, 0, 0, 0.4);
+            border-left-color: var(--color-accent-cyan);
+        }
+
+        .ticket-item:hover::before {
+            opacity: 1;
         }
 
         .ticket-item.urgent {
-            border-left-color: #ef4444;
+            border-left-color: var(--color-urgent);
+            background: linear-gradient(135deg,
+                rgba(220, 38, 38, 0.08) 0%,
+                rgba(20, 24, 36, 0.6) 100%
+            );
+        }
+
+        .ticket-item.urgent::before {
+            background: linear-gradient(180deg,
+                var(--color-urgent),
+                #b91c1c
+            );
+        }
+
+        .ticket-item.urgent:hover {
+            box-shadow:
+                0 0 40px rgba(220, 38, 38, 0.3),
+                0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        .ticket-item.status-resolved {
+            border-left-color: var(--color-success);
+            background: linear-gradient(135deg,
+                rgba(16, 185, 129, 0.08) 0%,
+                rgba(20, 24, 36, 0.6) 100%
+            );
+        }
+
+        .ticket-item.status-resolved::before {
+            background: linear-gradient(180deg,
+                var(--color-success),
+                #059669
+            );
+        }
+
+        .ticket-item.status-resolved:hover {
+            box-shadow:
+                0 0 30px rgba(16, 185, 129, 0.25),
+                0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        .ticket-item.status-active {
+            border-left-color: var(--color-warning);
+            background: linear-gradient(135deg,
+                rgba(245, 158, 11, 0.08) 0%,
+                rgba(20, 24, 36, 0.6) 100%
+            );
+        }
+
+        .ticket-item.status-active::before {
+            background: linear-gradient(180deg,
+                var(--color-warning),
+                #d97706
+            );
+        }
+
+        .ticket-item.status-active:hover {
+            box-shadow:
+                0 0 30px rgba(245, 158, 11, 0.25),
+                0 8px 24px rgba(0, 0, 0, 0.4);
         }
 
         .ticket-id {
+            font-family: 'JetBrains Mono', monospace;
             font-weight: 600;
-            color: #60a5fa;
-            margin-bottom: 5px;
+            font-size: 13px;
+            color: var(--color-accent-cyan);
+            margin-bottom: 8px;
             display: flex;
             align-items: center;
             gap: 10px;
+            text-shadow: 0 0 10px rgba(20, 241, 217, 0.4);
         }
 
         .ticket-subject {
-            font-size: 15px;
-            margin-bottom: 8px;
+            font-size: 16px;
+            margin-bottom: 12px;
+            font-weight: 500;
+            color: var(--color-text-primary);
+            line-height: 1.4;
         }
 
         .ticket-meta {
-            font-size: 12px;
-            color: #94a3b8;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--color-text-secondary);
             display: flex;
-            gap: 15px;
+            gap: 16px;
             flex-wrap: wrap;
         }
 
+        .ticket-meta span {
+            padding: 4px 8px;
+            background: rgba(20, 241, 217, 0.05);
+            border-radius: 4px;
+            border: 1px solid rgba(20, 241, 217, 0.1);
+        }
+
         .ticket-actions {
-            margin-top: 10px;
+            margin-top: 14px;
             display: flex;
             gap: 10px;
         }
 
         .ticket-actions a, .ticket-actions button {
-            font-size: 12px;
-            padding: 6px 12px;
-            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            padding: 8px 14px;
+            border-radius: 6px;
             text-decoration: none;
-            transition: all 0.2s;
+            transition: all 0.3s;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .view-zendesk {
-            background: #3b82f6;
+            background: linear-gradient(135deg,
+                var(--color-accent-blue),
+                var(--color-accent-purple)
+            );
             color: white;
             border: none;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
         }
 
         .view-zendesk:hover {
-            background: #2563eb;
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+            transform: translateY(-2px);
         }
 
         .view-details {
-            background: #475569;
-            color: white;
-            border: none;
+            background: rgba(20, 241, 217, 0.1);
+            color: var(--color-accent-cyan);
+            border: 1px solid var(--color-accent-cyan);
         }
 
         .view-details:hover {
-            background: #334155;
+            background: rgba(20, 241, 217, 0.2);
+            box-shadow: 0 0 20px rgba(20, 241, 217, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Main Content Containers - Lower z-index */
+        #content {
+            position: relative;
+            z-index: 10;
+        }
+
+        #alerts {
+            position: relative;
+            z-index: 10;
         }
 
         /* Modal Styles */
         .modal {
             display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.8);
-            animation: fadeIn 0.3s;
+            position: fixed !important;
+            z-index: 999999 !important;
+            left: 0 !important;
+            top: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            background-color: rgba(10, 14, 39, 0.95) !important;
+            backdrop-filter: blur(8px);
+            animation: fadeIn 0.4s;
+            overflow-y: auto;
+            pointer-events: auto !important;
         }
 
         .modal.show {
-            display: flex;
+            display: flex !important;
             align-items: center;
             justify-content: center;
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from {
+                opacity: 0;
+                backdrop-filter: blur(0px);
+            }
+            to {
+                opacity: 1;
+                backdrop-filter: blur(8px);
+            }
         }
 
         .modal-content {
-            background: #1e293b;
-            border-radius: 12px;
-            padding: 30px;
+            background: linear-gradient(135deg,
+                rgba(20, 24, 36, 0.95) 0%,
+                rgba(26, 31, 58, 0.9) 100%
+            ) !important;
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 40px;
             max-width: 800px;
             width: 90%;
-            max-height: 80vh;
+            max-height: 85vh;
             overflow-y: auto;
-            position: relative;
+            position: relative !important;
+            z-index: 1000000 !important;
+            border: 1px solid rgba(20, 241, 217, 0.2);
+            box-shadow:
+                0 0 60px rgba(20, 241, 217, 0.2),
+                0 30px 60px rgba(0, 0, 0, 0.6);
             animation: slideUp 0.3s;
             border: 1px solid #334155;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+            pointer-events: auto !important;
         }
 
         @keyframes slideUp {
@@ -486,88 +885,120 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
         }
 
         .modal-close {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            font-size: 28px;
+            position: absolute !important;
+            top: 20px !important;
+            right: 20px !important;
+            font-size: 32px;
             font-weight: bold;
-            color: #94a3b8;
+            color: var(--color-text-secondary);
             cursor: pointer;
-            background: none;
-            border: none;
+            background: rgba(20, 241, 217, 0.1);
+            border: 1px solid rgba(20, 241, 217, 0.2);
             padding: 0;
-            width: 30px;
-            height: 30px;
+            width: 44px;
+            height: 44px;
             display: flex;
             align-items: center;
             justify-content: center;
+            border-radius: 8px;
+            transition: all 0.3s;
+            z-index: 1000001 !important;
         }
 
         .modal-close:hover {
-            color: #e2e8f0;
+            color: var(--color-accent-cyan);
+            background: rgba(20, 241, 217, 0.2);
+            transform: scale(1.1) rotate(90deg);
+            box-shadow: 0 0 20px rgba(20, 241, 217, 0.4);
         }
 
         .modal-header {
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #334155;
+            margin-bottom: 28px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(20, 241, 217, 0.2);
         }
 
         .modal-header h2 {
-            color: #60a5fa;
-            margin-bottom: 10px;
-            font-size: 24px;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg,
+                var(--color-accent-cyan),
+                var(--color-accent-purple)
+            );
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .modal-body {
-            color: #cbd5e1;
+            color: var(--color-text-primary);
         }
 
         .detail-section {
-            margin-bottom: 25px;
+            margin-bottom: 28px;
         }
 
         .detail-section h3 {
-            color: #94a3b8;
-            font-size: 14px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--color-accent-cyan);
+            font-size: 12px;
             text-transform: uppercase;
-            margin-bottom: 10px;
-            font-weight: 600;
+            margin-bottom: 12px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
         }
 
         .detail-content {
-            background: #0f172a;
-            padding: 15px;
-            border-radius: 6px;
+            background: rgba(10, 14, 39, 0.6);
+            padding: 20px;
+            border-radius: 8px;
             white-space: pre-wrap;
-            line-height: 1.6;
+            line-height: 1.7;
+            border: 1px solid rgba(20, 241, 217, 0.1);
+            font-size: 14px;
         }
 
         .comment-item {
-            background: #0f172a;
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 10px;
-            border-left: 3px solid #475569;
+            background: rgba(10, 14, 39, 0.5);
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 14px;
+            border-left: 2px solid rgba(20, 241, 217, 0.3);
+            border: 1px solid rgba(20, 241, 217, 0.1);
+            border-left-width: 2px;
+            transition: all 0.3s;
+        }
+
+        .comment-item:hover {
+            background: rgba(20, 24, 36, 0.6);
+            border-left-color: var(--color-accent-cyan);
+            box-shadow: 0 0 20px rgba(20, 241, 217, 0.1);
         }
 
         .comment-author {
-            font-weight: 600;
-            color: #60a5fa;
-            margin-bottom: 5px;
-            font-size: 13px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            color: var(--color-accent-cyan);
+            margin-bottom: 6px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .comment-time {
-            font-size: 11px;
-            color: #64748b;
-            margin-bottom: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--color-text-muted);
+            margin-bottom: 10px;
         }
 
         .comment-body {
-            color: #cbd5e1;
+            color: var(--color-text-primary);
             font-size: 13px;
-            line-height: 1.5;
+            line-height: 1.6;
         }
 
         .loading-spinner {
@@ -577,52 +1008,77 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
 
         .loading-spinner::after {
             content: "Loading...";
-            color: #60a5fa;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--color-accent-cyan);
+            font-size: 14px;
         }
 
         /* SLA Status Badges */
         .sla-badge {
             display: inline-block;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 600;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
+            border: 1px solid;
+            box-shadow: 0 0 10px currentColor;
         }
 
         .sla-ok {
-            background: #22c55e;
-            color: white;
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--color-success);
+            border-color: var(--color-success);
         }
 
         .sla-warning {
-            background: #f59e0b;
-            color: white;
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--color-warning);
+            border-color: var(--color-warning);
+            animation: pulse-sla 2s ease-in-out infinite;
         }
 
         .sla-breach {
-            background: #ef4444;
-            color: white;
-            animation: pulse-sla 2s infinite;
+            background: rgba(220, 38, 38, 0.2);
+            color: var(--color-urgent);
+            border-color: var(--color-urgent);
+            animation: pulse-sla 1.5s ease-in-out infinite;
+            box-shadow: 0 0 20px rgba(220, 38, 38, 0.6);
         }
 
         .sla-none {
-            background: #475569;
-            color: #cbd5e1;
+            background: rgba(107, 114, 128, 0.15);
+            color: var(--color-text-muted);
+            border-color: var(--color-text-muted);
         }
 
         @keyframes pulse-sla {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
+            0%, 100% {
+                opacity: 1;
+                box-shadow: 0 0 20px currentColor;
+            }
+            50% {
+                opacity: 0.7;
+                box-shadow: 0 0 10px currentColor;
+            }
         }
 
         .alert-banner {
-            background: #dc2626;
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            animation: slideIn 0.3s ease-out;
+            background: linear-gradient(135deg,
+                rgba(220, 38, 38, 0.2) 0%,
+                rgba(185, 28, 28, 0.15) 100%
+            );
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--color-urgent);
+            padding: 18px 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            animation: slideIn 0.4s ease-out;
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 0 30px rgba(220, 38, 38, 0.3);
         }
 
         @keyframes slideIn {
@@ -638,19 +1094,21 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
 
         .loading {
             text-align: center;
-            padding: 40px;
-            font-size: 18px;
-            color: #64748b;
+            padding: 60px;
+            font-size: 16px;
+            color: var(--color-text-secondary);
+            font-family: 'JetBrains Mono', monospace;
         }
 
         .spinner {
-            border: 3px solid #334155;
-            border-top: 3px solid #60a5fa;
+            border: 3px solid rgba(20, 241, 217, 0.2);
+            border-top: 3px solid var(--color-accent-cyan);
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
+            width: 50px;
+            height: 50px;
+            animation: spin 0.8s linear infinite;
+            margin: 30px auto;
+            box-shadow: 0 0 20px rgba(20, 241, 217, 0.3);
         }
 
         @keyframes spin {
@@ -660,45 +1118,351 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
 
         .controls {
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
+            gap: 12px;
+            margin-bottom: 30px;
             flex-wrap: wrap;
+            position: relative;
+            z-index: 10;
+            animation: fade-in-up 0.6s ease-out;
         }
 
         button {
-            background: #3b82f6;
-            color: white;
+            font-family: 'JetBrains Mono', monospace;
+            background: linear-gradient(135deg,
+                var(--color-accent-cyan),
+                var(--color-accent-blue)
+            );
+            color: var(--color-bg-primary);
             border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 12px rgba(20, 241, 217, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg,
+                var(--color-accent-cyan-bright),
+                var(--color-accent-purple-bright)
+            );
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        button:hover::before {
+            opacity: 1;
         }
 
         button:hover {
-            background: #2563eb;
+            box-shadow: 0 6px 20px rgba(20, 241, 217, 0.5);
+            transform: translateY(-2px);
+        }
+
+        button span {
+            position: relative;
+            z-index: 1;
         }
 
         button.secondary {
-            background: #475569;
+            background: rgba(20, 241, 217, 0.1);
+            color: var(--color-accent-cyan);
+            border: 1px solid rgba(20, 241, 217, 0.3);
+            box-shadow: none;
+        }
+
+        button.secondary::before {
+            background: rgba(20, 241, 217, 0.2);
         }
 
         button.secondary:hover {
-            background: #334155;
+            background: rgba(20, 241, 217, 0.15);
+            box-shadow: 0 0 20px rgba(20, 241, 217, 0.3);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(10, 14, 39, 0.5);
+            border-radius: 6px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg,
+                var(--color-accent-cyan),
+                var(--color-accent-purple)
+            );
+            border-radius: 6px;
+            border: 2px solid rgba(10, 14, 39, 0.5);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg,
+                var(--color-accent-cyan-bright),
+                var(--color-accent-purple-bright)
+            );
+            box-shadow: 0 0 10px rgba(20, 241, 217, 0.5);
+        }
+
+        /* Firefox scrollbar */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--color-accent-cyan) rgba(10, 14, 39, 0.5);
+        }
+
+        /* Agent Status Section */
+        .agent-status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .agent-card {
+            background: linear-gradient(135deg,
+                rgba(20, 24, 36, 0.8) 0%,
+                rgba(26, 31, 58, 0.6) 100%
+            );
+            backdrop-filter: blur(10px);
+            border-radius: 14px;
+            padding: 24px;
+            border: 1px solid rgba(20, 241, 217, 0.15);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .agent-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg,
+                var(--color-accent-cyan),
+                var(--color-accent-purple)
+            );
+            opacity: 0.7;
+        }
+
+        .agent-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 0 30px rgba(20, 241, 217, 0.25);
+            border-color: var(--color-accent-cyan);
+        }
+
+        .agent-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+        }
+
+        .agent-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--color-text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .agent-avatar {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+        .agent-status-online {
+            background: var(--color-success);
+            color: var(--color-success);
+            box-shadow: 0 0 12px currentColor;
+        }
+
+        .agent-status-busy {
+            background: var(--color-warning);
+            color: var(--color-warning);
+            box-shadow: 0 0 12px currentColor;
+        }
+
+        .agent-status-critical {
+            background: var(--color-urgent);
+            color: var(--color-urgent);
+            box-shadow: 0 0 12px currentColor;
+        }
+
+        .agent-status-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid;
+        }
+
+        .agent-status-label.online {
+            color: var(--color-success);
+            border-color: var(--color-success);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .agent-status-label.busy {
+            color: var(--color-warning);
+            border-color: var(--color-warning);
+            background: rgba(245, 158, 11, 0.1);
+        }
+
+        .agent-status-label.critical {
+            color: var(--color-urgent);
+            border-color: var(--color-urgent);
+            background: rgba(220, 38, 38, 0.1);
+        }
+
+        .agent-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .agent-metric {
+            text-align: center;
+        }
+
+        .agent-metric-value {
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 4px;
+            background: linear-gradient(135deg,
+                var(--color-text-primary),
+                var(--color-accent-cyan)
+            );
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .agent-metric-value.urgent {
+            background: linear-gradient(135deg,
+                var(--color-urgent),
+                #f97316
+            );
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .agent-metric-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            color: var(--color-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .agent-workload {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(20, 241, 217, 0.1);
+        }
+
+        .agent-workload-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--color-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .agent-workload-bar {
+            height: 8px;
+            background: rgba(20, 241, 217, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .agent-workload-fill {
+            height: 100%;
+            background: linear-gradient(90deg,
+                var(--color-accent-cyan),
+                var(--color-accent-purple)
+            );
+            border-radius: 4px;
+            transition: width 0.6s ease-out;
+            box-shadow: 0 0 10px rgba(20, 241, 217, 0.5);
+        }
+
+        .agent-workload-fill.high {
+            background: linear-gradient(90deg,
+                var(--color-warning),
+                #f97316
+            );
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+        }
+
+        .agent-workload-fill.critical {
+            background: linear-gradient(90deg,
+                var(--color-urgent),
+                #b91c1c
+            );
+            box-shadow: 0 0 10px rgba(220, 38, 38, 0.5);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 28px;
+            }
+
+            .card-value {
+                font-size: 42px;
+            }
+
+            .grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+
+            .agent-status-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>🎯 Zendesk Real-Time Dashboard</h1>
+        <h1>⚡ ZENDESK MISSION CONTROL</h1>
         <div class="meta">
             <span class="status-indicator status-live"></span>
-            <span id="status">Live</span> |
-            Last update: <span id="lastUpdate">Loading...</span> |
-            Auto-refresh: <span id="refreshInterval">30s</span> |
-            Timezone: CST
+            <span id="status">LIVE</span>
+            <span style="opacity: 0.5; margin: 0 8px;">|</span>
+            <span>LAST UPDATE: <span id="lastUpdate">Loading...</span></span>
+            <span style="opacity: 0.5; margin: 0 8px;">|</span>
+            <span>AUTO-REFRESH: <span id="refreshInterval">30s</span></span>
+            <span style="opacity: 0.5; margin: 0 8px;">|</span>
+            <span>TIMEZONE: CST</span>
         </div>
     </div>
 
@@ -756,6 +1520,27 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
 
         function getAgentName(agentId) {
             return AGENT_NAMES[agentId] || `Agent ID: ${agentId}`;
+        }
+
+        // Get agent status based on workload
+        function getAgentStatus(agentData) {
+            const openTickets = agentData.open || 0;
+            const urgentTickets = agentData.urgent || 0;
+
+            if (urgentTickets >= 3 || openTickets >= 10) {
+                return { status: 'critical', label: 'Critical' };
+            } else if (urgentTickets >= 1 || openTickets >= 5) {
+                return { status: 'busy', label: 'Busy' };
+            } else {
+                return { status: 'online', label: 'Available' };
+            }
+        }
+
+        // Get workload percentage based on total volume
+        function getWorkloadPercentage(agentData, totalAssignedTickets) {
+            if (totalAssignedTickets === 0) return 0;
+            const agentTotal = agentData.total || 0;
+            return Math.round((agentTotal / totalAssignedTickets) * 100);
         }
 
         // SLA calculation using Zendesk SLA metrics (resolution_time or reply_time)
@@ -1026,6 +1811,94 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
                     </div>
                 </div>
 
+                ${Object.keys(stats.byAssignee).length > 0 ? `
+                    <div class="section">
+                        <div class="section-title">👥 AGENT STATUS MONITOR</div>
+                        <div class="agent-status-grid">
+                            ${(() => {
+                                // Calculate total assigned tickets across all agents
+                                const totalAssignedTickets = Object.values(stats.byAssignee).reduce((sum, agent) => sum + agent.total, 0);
+
+                                return Object.entries(stats.byAssignee)
+                                    .sort((a, b) => b[1].open - a[1].open)
+                                    .map(([assigneeId, data]) => {
+                                        const agentStatus = getAgentStatus(data);
+                                        const workloadPercentage = getWorkloadPercentage(data, totalAssignedTickets);
+                                        const workloadClass = workloadPercentage >= 40 ? 'critical' : workloadPercentage >= 25 ? 'high' : '';
+
+                                    return `
+                                        <div class="agent-card" onclick="showFilteredTickets(t => t.assignee_id == '${assigneeId}', '👤 ${getAgentName(assigneeId)} Tickets')">
+                                            <div class="agent-header">
+                                                <div class="agent-name">
+                                                    <span class="agent-avatar agent-status-${agentStatus.status}"></span>
+                                                    ${getAgentName(assigneeId)}
+                                                </div>
+                                                <span class="agent-status-label ${agentStatus.status}">${agentStatus.label}</span>
+                                            </div>
+                                            <div class="agent-metrics">
+                                                <div class="agent-metric">
+                                                    <div class="agent-metric-value">${data.total}</div>
+                                                    <div class="agent-metric-label">Total</div>
+                                                </div>
+                                                <div class="agent-metric">
+                                                    <div class="agent-metric-value">${data.open}</div>
+                                                    <div class="agent-metric-label">Open</div>
+                                                </div>
+                                                <div class="agent-metric">
+                                                    <div class="agent-metric-value urgent">${data.urgent || 0}</div>
+                                                    <div class="agent-metric-label">Urgent</div>
+                                                </div>
+                                            </div>
+                                            <div class="agent-workload">
+                                                <div class="agent-workload-label">
+                                                    <span>Volume Share</span>
+                                                    <span>${Math.round(workloadPercentage)}%</span>
+                                                </div>
+                                                <div class="agent-workload-bar">
+                                                    <div class="agent-workload-fill ${workloadClass}" style="width: ${workloadPercentage}%"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `;
+                                    }).join('');
+                            })()}
+                            ${stats.unassigned > 0 ? `
+                                <div class="agent-card" onclick="showFilteredTickets(t => !t.assignee_id, '⚪ Unassigned Tickets')" style="border-color: rgba(239, 68, 68, 0.3);">
+                                    <div class="agent-header">
+                                        <div class="agent-name">
+                                            <span class="agent-avatar agent-status-critical"></span>
+                                            Unassigned
+                                        </div>
+                                        <span class="agent-status-label critical">Action Needed</span>
+                                    </div>
+                                    <div class="agent-metrics">
+                                        <div class="agent-metric">
+                                            <div class="agent-metric-value urgent">${stats.unassigned}</div>
+                                            <div class="agent-metric-label">Tickets</div>
+                                        </div>
+                                        <div class="agent-metric">
+                                            <div class="agent-metric-value">—</div>
+                                            <div class="agent-metric-label">Open</div>
+                                        </div>
+                                        <div class="agent-metric">
+                                            <div class="agent-metric-value">—</div>
+                                            <div class="agent-metric-label">Urgent</div>
+                                        </div>
+                                    </div>
+                                    <div class="agent-workload">
+                                        <div class="agent-workload-label">
+                                            <span>Requires Assignment</span>
+                                        </div>
+                                        <div class="agent-workload-bar">
+                                            <div class="agent-workload-fill critical" style="width: 100%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                ` : ''}
+
                 <div class="section">
                     <div class="section-title">📈 Tickets by Hour of Day</div>
                     <div style="background: #1e293b; padding: 20px; border-radius: 12px; border: 1px solid #334155;">
@@ -1061,34 +1934,6 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
                     </div>
                 </div>
 
-                ${Object.keys(stats.byAssignee).length > 0 ? `
-                    <div class="section">
-                        <div class="section-title">👥 Tickets by Assignee</div>
-                        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
-                            ${Object.entries(stats.byAssignee)
-                                .sort((a, b) => b[1].total - a[1].total)
-                                .slice(0, 6)
-                                .map(([assigneeId, data]) => `
-                                    <div class="card clickable" onclick="showFilteredTickets(t => t.assignee_id == '${assigneeId}', '👤 ${getAgentName(assigneeId)} Tickets')">
-                                        <div class="card-header">${getAgentName(assigneeId)}</div>
-                                        <div class="card-value" style="font-size: 28px;">${data.total}</div>
-                                        <div class="card-label">
-                                            ${data.urgent > 0 ? `🔴 ${data.urgent} urgent` : ''}
-                                            ${data.open > 0 ? `📂 ${data.open} open` : ''}
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            ${stats.unassigned > 0 ? `
-                                <div class="card clickable" onclick="showFilteredTickets(t => !t.assignee_id, '⚪ Unassigned Tickets')">
-                                    <div class="card-header">⚪ Unassigned</div>
-                                    <div class="card-value" style="font-size: 28px;">${stats.unassigned}</div>
-                                    <div class="card-label">Need assignment</div>
-                                </div>
-                            ` : ''}
-                        </div>
-                    </div>
-                ` : ''}
-
                 ${urgentTickets.length > 0 ? `
                     <div class="section">
                         <div class="section-title">
@@ -1118,8 +1963,14 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
                         📋 Recent Tickets
                         <span class="badge">${Math.min(tickets.length, 10)}</span>
                     </div>
-                    ${tickets.slice(0, 10).map(ticket => `
-                        <div class="ticket-item ${ticket.priority === 'urgent' ? 'urgent' : ''}" data-ticket-id="${ticket.id}">
+                    ${tickets.slice(0, 10).map(ticket => {
+                        const isResolved = ['solved', 'closed'].includes(ticket.status);
+                        const isUrgent = ticket.priority === 'urgent' && !isResolved;
+                        const statusClass = isResolved ? 'status-resolved' : 'status-active';
+                        const urgentClass = isUrgent ? 'urgent' : '';
+
+                        return `
+                        <div class="ticket-item ${urgentClass} ${statusClass}" data-ticket-id="${ticket.id}">
                             <div class="ticket-id">#${ticket.id} 🔗 ${renderSLABadge(ticket)}</div>
                             <div class="ticket-subject">${ticket.subject || 'No subject'}</div>
                             <div class="ticket-meta">
@@ -1133,7 +1984,8 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
                                 <button class="view-details" onclick="showTicketDetails(${ticket.id}); event.stopPropagation()">📋 View Details</button>
                             </div>
                         </div>
-                    `).join('')}
+                        `;
+                    }).join('')}
                 </div>
             `;
 
@@ -1182,16 +2034,19 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
                     datasets: [{
                         label: 'Tickets Created',
                         data: hourCounts,
-                        borderColor: '#60a5fa',
-                        backgroundColor: 'rgba(96, 165, 250, 0.1)',
-                        borderWidth: 2,
+                        borderColor: '#14f1d9',
+                        backgroundColor: 'rgba(20, 241, 217, 0.15)',
+                        borderWidth: 3,
                         fill: true,
                         tension: 0.4,
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
-                        pointBackgroundColor: '#60a5fa',
-                        pointBorderColor: '#1e293b',
-                        pointBorderWidth: 2
+                        pointRadius: 5,
+                        pointHoverRadius: 8,
+                        pointBackgroundColor: '#14f1d9',
+                        pointBorderColor: '#0a0e27',
+                        pointBorderWidth: 2,
+                        pointHoverBackgroundColor: '#00fff7',
+                        pointHoverBorderColor: '#14f1d9',
+                        pointHoverBorderWidth: 3
                     }]
                 },
                 options: {
@@ -1201,21 +2056,34 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
                         legend: {
                             display: true,
                             labels: {
-                                color: '#e2e8f0',
+                                color: '#14f1d9',
                                 font: {
-                                    size: 14,
-                                    weight: 600
-                                }
+                                    family: 'JetBrains Mono',
+                                    size: 12,
+                                    weight: 700
+                                },
+                                padding: 15,
+                                usePointStyle: true,
+                                pointStyle: 'circle'
                             }
                         },
                         tooltip: {
-                            backgroundColor: '#1e293b',
-                            titleColor: '#e2e8f0',
-                            bodyColor: '#cbd5e1',
-                            borderColor: '#334155',
+                            backgroundColor: 'rgba(20, 24, 36, 0.95)',
+                            titleColor: '#14f1d9',
+                            bodyColor: '#e8edf5',
+                            borderColor: '#14f1d9',
                             borderWidth: 1,
-                            padding: 12,
-                            displayColors: false,
+                            padding: 14,
+                            displayColors: true,
+                            titleFont: {
+                                family: 'JetBrains Mono',
+                                size: 13,
+                                weight: 700
+                            },
+                            bodyFont: {
+                                family: 'JetBrains Mono',
+                                size: 12
+                            },
                             callbacks: {
                                 label: function(context) {
                                     const count = context.parsed.y;
@@ -1228,33 +2096,45 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
                         y: {
                             beginAtZero: true,
                             ticks: {
-                                color: '#94a3b8',
+                                color: '#9ca3af',
                                 stepSize: 1,
+                                font: {
+                                    family: 'JetBrains Mono',
+                                    size: 11
+                                },
                                 callback: function(value) {
                                     return Number.isInteger(value) ? value : '';
                                 }
                             },
                             grid: {
-                                color: '#334155',
-                                drawBorder: false
+                                color: 'rgba(20, 241, 217, 0.05)',
+                                drawBorder: false,
+                                lineWidth: 1
                             },
                             title: {
                                 display: true,
-                                text: 'Number of Tickets',
-                                color: '#94a3b8',
+                                text: 'NUMBER OF TICKETS',
+                                color: '#14f1d9',
                                 font: {
-                                    size: 12
-                                }
+                                    family: 'JetBrains Mono',
+                                    size: 10,
+                                    weight: 700
+                                },
+                                padding: { top: 10, bottom: 10 }
                             }
                         },
                         x: {
                             ticks: {
-                                color: '#94a3b8',
+                                color: '#9ca3af',
                                 maxRotation: 45,
-                                minRotation: 45
+                                minRotation: 45,
+                                font: {
+                                    family: 'JetBrains Mono',
+                                    size: 10
+                                }
                             },
                             grid: {
-                                color: '#334155',
+                                color: 'rgba(20, 241, 217, 0.03)',
                                 drawBorder: false
                             },
                             title: {
@@ -1293,18 +2173,18 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
             const channelLabels = sortedChannels.map(([channel]) => channel);
             const channelData = sortedChannels.map(([, count]) => count);
 
-            // Color palette for channels
+            // Color palette for channels - Mission Control theme
             const channelColors = {
-                'API': '#14b8a6',      // Turquoise
-                'Email': '#eab308',    // Yellow
-                'Web': '#22c55e',      // Green
-                'Mobile': '#f59e0b',   // Orange
-                'Chat': '#8b5cf6',     // Purple
-                'Unknown': '#64748b'   // Gray
+                'API': '#14f1d9',      // Electric Cyan
+                'Email': '#8b5cf6',    // Purple
+                'Web': '#6366f1',      // Blue
+                'Mobile': '#a78bfa',   // Light Purple
+                'Chat': '#00fff7',     // Bright Cyan
+                'Unknown': '#6b7280'   // Gray
             };
 
-            const backgroundColors = channelLabels.map(label => channelColors[label] || '#94a3b8');
-            const borderColors = backgroundColors.map(color => color);
+            const backgroundColors = channelLabels.map(label => channelColors[label] || '#9ca3af');
+            const borderColors = channelLabels.map(label => channelColors[label] || '#9ca3af');
 
             // Destroy previous chart instance if it exists
             if (ticketsByChannelChartInstance) {
@@ -1320,9 +2200,11 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
                         label: 'Tickets by Channel',
                         data: channelData,
                         backgroundColor: backgroundColors,
-                        borderColor: borderColors,
-                        borderWidth: 2,
-                        hoverOffset: 10
+                        borderColor: '#0a0e27',
+                        borderWidth: 3,
+                        hoverOffset: 15,
+                        hoverBorderColor: '#14f1d9',
+                        hoverBorderWidth: 4
                     }]
                 },
                 options: {
@@ -1349,12 +2231,15 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
                             display: true,
                             position: 'right',
                             labels: {
-                                color: '#ffffff',
+                                color: '#e8edf5',
                                 font: {
-                                    size: 14,
-                                    weight: 600
+                                    family: 'JetBrains Mono',
+                                    size: 11,
+                                    weight: 700
                                 },
-                                padding: 15,
+                                padding: 18,
+                                usePointStyle: true,
+                                pointStyle: 'circle',
                                 generateLabels: function(chart) {
                                     const data = chart.data;
                                     if (data.labels.length && data.datasets.length) {
@@ -1365,8 +2250,8 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
                                             return {
                                                 text: `${label}: ${value} (${percentage}%)`,
                                                 fillStyle: data.datasets[0].backgroundColor[i],
-                                                strokeStyle: data.datasets[0].borderColor[i],
-                                                fontColor: '#ffffff',
+                                                strokeStyle: data.datasets[0].backgroundColor[i],
+                                                fontColor: '#e8edf5',
                                                 hidden: false,
                                                 index: i
                                             };
@@ -1377,12 +2262,21 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
                             }
                         },
                         tooltip: {
-                            backgroundColor: '#1e293b',
-                            titleColor: '#e2e8f0',
-                            bodyColor: '#cbd5e1',
-                            borderColor: '#334155',
+                            backgroundColor: 'rgba(20, 24, 36, 0.95)',
+                            titleColor: '#14f1d9',
+                            bodyColor: '#e8edf5',
+                            borderColor: '#14f1d9',
                             borderWidth: 1,
-                            padding: 12,
+                            padding: 14,
+                            titleFont: {
+                                family: 'JetBrains Mono',
+                                size: 13,
+                                weight: 700
+                            },
+                            bodyFont: {
+                                family: 'JetBrains Mono',
+                                size: 12
+                            },
                             callbacks: {
                                 label: function(context) {
                                     const label = context.label || '';
@@ -1421,7 +2315,7 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
             const indicator = document.querySelector('.status-indicator');
 
             if (status === 'live') {
-                statusEl.textContent = 'Live';
+                statusEl.textContent = 'LIVE';
                 indicator.className = 'status-indicator status-live';
             } else {
                 statusEl.textContent = `Error: ${message}`;
