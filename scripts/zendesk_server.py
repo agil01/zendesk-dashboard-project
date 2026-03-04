@@ -2501,7 +2501,10 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
 
                 renderDashboard(tickets, stats);
                 updateStatus('live');
-                document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+                const now = new Date();
+                const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                document.getElementById('lastUpdate').textContent = `${dateStr} ${timeStr}`;
             }
         }
 
