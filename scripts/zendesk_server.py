@@ -34,6 +34,9 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
         elif parsed_path.path.startswith('/api/ticket/'):
             ticket_id = parsed_path.path.split('/')[-1]
             self.handle_ticket_detail_request(ticket_id)
+        # API endpoint - agent statuses
+        elif parsed_path.path == '/api/agents':
+            self.handle_agents_request()
         # Serve dashboard HTML
         elif parsed_path.path == '/' or parsed_path.path == '/dashboard':
             self.serve_dashboard()
@@ -207,6 +210,63 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps(ticket).encode())
             else:
                 self.send_error(ticket_response.status_code, f"Zendesk API error: {ticket_response.text}")
+
+        except Exception as e:
+            self.send_error(500, f"Server error: {str(e)}")
+
+    def handle_agents_request(self):
+        """Fetch agent availability statuses from Zendesk Agent Availability API."""
+        try:
+            # Agent IDs to check
+            agent_ids = ['39948397141915', '21761242009371', '21761363093147']
+
+            agent_statuses = {}
+            base_url = f"https://{self.subdomain}.zendesk.com/api/v2"
+
+            for agent_id in agent_ids:
+                try:
+                    # Fetch agent availability using Agent Availability API
+                    availability_url = f"{base_url}/agent_availabilities/{agent_id}"
+                    response = requests.get(
+                        availability_url,
+                        auth=(f"{self.email}/token", self.api_token),
+                        timeout=10
+                    )
+
+                    if response.status_code == 200:
+                        data = response.json()
+                        # Extract agent status from JSON:API format
+                        agent_data = data.get('data', {})
+                        attributes = agent_data.get('attributes', {})
+                        agent_status_info = attributes.get('agent_status', {})
+
+                        # Status name: online, away, transfers_only, offline
+                        status = agent_status_info.get('name', 'offline')
+                        updated_at = agent_status_info.get('updated_at')
+
+                        agent_statuses[agent_id] = {
+                            'status': status,
+                            'updated_at': updated_at
+                        }
+                    else:
+                        # Default to offline if we can't fetch status
+                        agent_statuses[agent_id] = {
+                            'status': 'offline',
+                            'updated_at': None
+                        }
+                except Exception as e:
+                    print(f"Error fetching status for agent {agent_id}: {e}")
+                    agent_statuses[agent_id] = {
+                        'status': 'offline',
+                        'updated_at': None
+                    }
+
+            # Send JSON response
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps(agent_statuses).encode())
 
         except Exception as e:
             self.send_error(500, f"Server error: {str(e)}")
@@ -1307,6 +1367,18 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
             box-shadow: 0 0 12px currentColor;
         }
 
+        .agent-status-away {
+            background: var(--color-warning);
+            color: var(--color-warning);
+            box-shadow: 0 0 12px currentColor;
+        }
+
+        .agent-status-offline {
+            background: var(--color-text-muted);
+            color: var(--color-text-muted);
+            box-shadow: 0 0 12px currentColor;
+        }
+
         .agent-status-label {
             font-family: 'JetBrains Mono', monospace;
             font-size: 10px;
@@ -1334,6 +1406,18 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
             color: var(--color-urgent);
             border-color: var(--color-urgent);
             background: rgba(220, 38, 38, 0.1);
+        }
+
+        .agent-status-label.away {
+            color: var(--color-warning);
+            border-color: var(--color-warning);
+            background: rgba(245, 158, 11, 0.1);
+        }
+
+        .agent-status-label.offline {
+            color: var(--color-text-muted);
+            border-color: var(--color-text-muted);
+            background: rgba(107, 114, 128, 0.1);
         }
 
         .agent-metrics {
@@ -1504,6 +1588,7 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
     <script>
         // Store all tickets globally for filtering
         let allTickets = [];
+        let agentStatuses = {};
 
         const CONFIG = {
             subdomain: 'counterparthealth',
@@ -1522,17 +1607,39 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
             return AGENT_NAMES[agentId] || `Agent ID: ${agentId}`;
         }
 
-        // Get agent status based on workload
-        function getAgentStatus(agentData) {
-            const openTickets = agentData.open || 0;
-            const urgentTickets = agentData.urgent || 0;
+        // Get agent status from Zendesk unified status
+        function getAgentStatus(agentId, agentData) {
+            const zendeskStatus = agentStatuses[agentId];
 
-            if (urgentTickets >= 3 || openTickets >= 10) {
-                return { status: 'critical', label: 'Critical' };
-            } else if (urgentTickets >= 1 || openTickets >= 5) {
-                return { status: 'busy', label: 'Busy' };
-            } else {
-                return { status: 'online', label: 'Available' };
+            if (zendeskStatus && zendeskStatus.status) {
+                const status = zendeskStatus.status.toLowerCase();
+
+                if (status === 'online') {
+                    return { status: 'online', label: 'Online' };
+                } else if (status === 'away') {
+                    return { status: 'away', label: 'Away' };
+                } else if (status === 'transfers_only') {
+                    return { status: 'away', label: 'Transfers Only' };
+                } else if (status === 'offline') {
+                    return { status: 'offline', label: 'Offline' };
+                } else {
+                    return { status: 'offline', label: 'Offline' };
+                }
+            }
+
+            // Default to offline if status unknown
+            return { status: 'offline', label: 'Offline' };
+        }
+
+        // Fetch agent statuses from Zendesk
+        async function fetchAgentStatuses() {
+            try {
+                const response = await fetch('/api/agents');
+                if (response.ok) {
+                    agentStatuses = await response.json();
+                }
+            } catch (error) {
+                console.error('Error fetching agent statuses:', error);
             }
         }
 
@@ -1822,7 +1929,7 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
                                 return Object.entries(stats.byAssignee)
                                     .sort((a, b) => b[1].open - a[1].open)
                                     .map(([assigneeId, data]) => {
-                                        const agentStatus = getAgentStatus(data);
+                                        const agentStatus = getAgentStatus(assigneeId, data);
                                         const workloadPercentage = getWorkloadPercentage(data, totalAssignedTickets);
                                         const workloadClass = workloadPercentage >= 40 ? 'critical' : workloadPercentage >= 25 ? 'high' : '';
 
@@ -2324,7 +2431,11 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
         }
 
         async function fetchData() {
-            const tickets = await fetchTickets();
+            // Fetch both tickets and agent statuses in parallel
+            const [tickets] = await Promise.all([
+                fetchTickets(),
+                fetchAgentStatuses()
+            ]);
 
             if (tickets) {
                 allTickets = tickets; // Store globally for filtering
