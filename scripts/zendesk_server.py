@@ -2132,9 +2132,9 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
                 <div class="section">
                     <div class="section-title">
                         📋 Recent Tickets
-                        <span class="badge">${Math.min(tickets.length, 10)}</span>
+                        <span class="badge">${tickets.length}</span>
                     </div>
-                    ${tickets.slice(0, 10).map(ticket => {
+                    ${tickets.map(ticket => {
                         const isResolved = ['solved', 'closed'].includes(ticket.status);
                         const isOnHold = ticket.status === 'hold';
                         const isUrgent = ticket.priority === 'urgent' && !isResolved && !isOnHold;
