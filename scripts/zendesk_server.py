@@ -1324,7 +1324,6 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
             position: relative;
             overflow: hidden;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
         }
 
         .agent-card::before {
@@ -1445,11 +1444,39 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 12px;
-            margin-bottom: 16px;
+            margin-bottom: 28px;
         }
 
         .agent-metric {
             text-align: center;
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .agent-metric:hover {
+            background: rgba(20, 241, 217, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .agent-metric::after {
+            content: 'Click to view';
+            position: absolute;
+            bottom: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 8px;
+            color: var(--color-accent-cyan);
+            opacity: 0;
+            transition: opacity 0.3s;
+            white-space: nowrap;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .agent-metric:hover::after {
+            opacity: 0.8;
         }
 
         .agent-metric-value {
@@ -1464,6 +1491,11 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            transition: all 0.3s;
+        }
+
+        .agent-metric:hover .agent-metric-value {
+            transform: scale(1.1);
         }
 
         .agent-metric-value.urgent {
@@ -1961,8 +1993,8 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
                                         const workloadClass = workloadPercentage >= 40 ? 'critical' : workloadPercentage >= 25 ? 'high' : '';
 
                                     return `
-                                        <div class="agent-card" onclick="showFilteredTickets(t => t.assignee_id == '${assigneeId}', '👤 ${getAgentName(assigneeId)} Tickets')">
-                                            <div class="agent-header">
+                                        <div class="agent-card">
+                                            <div class="agent-header" onclick="showFilteredTickets(t => t.assignee_id == '${assigneeId}', '👤 ${getAgentName(assigneeId)} - All Tickets')" style="cursor: pointer;">
                                                 <div class="agent-name">
                                                     <span class="agent-avatar agent-status-${agentStatus.status}"></span>
                                                     ${getAgentName(assigneeId)}
@@ -1970,15 +2002,15 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
                                                 <span class="agent-status-label ${agentStatus.status}">${agentStatus.label}</span>
                                             </div>
                                             <div class="agent-metrics">
-                                                <div class="agent-metric">
+                                                <div class="agent-metric" onclick="showFilteredTickets(t => t.assignee_id == '${assigneeId}', '👤 ${getAgentName(assigneeId)} - All Tickets'); event.stopPropagation();">
                                                     <div class="agent-metric-value">${data.total}</div>
                                                     <div class="agent-metric-label">Total</div>
                                                 </div>
-                                                <div class="agent-metric">
+                                                <div class="agent-metric" onclick="showFilteredTickets(t => t.assignee_id == '${assigneeId}' && ['new', 'open', 'pending'].includes(t.status), '👤 ${getAgentName(assigneeId)} - Open Tickets'); event.stopPropagation();">
                                                     <div class="agent-metric-value">${data.open}</div>
                                                     <div class="agent-metric-label">Open</div>
                                                 </div>
-                                                <div class="agent-metric">
+                                                <div class="agent-metric" onclick="showFilteredTickets(t => t.assignee_id == '${assigneeId}' && t.priority === 'urgent' && !['solved', 'closed'].includes(t.status), '👤 ${getAgentName(assigneeId)} - Urgent Tickets'); event.stopPropagation();">
                                                     <div class="agent-metric-value urgent">${data.urgent || 0}</div>
                                                     <div class="agent-metric-label">Urgent</div>
                                                 </div>
