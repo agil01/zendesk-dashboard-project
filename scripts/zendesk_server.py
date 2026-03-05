@@ -1859,7 +1859,12 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
                 hold: 0,
                 solved: 0,
                 closed: 0,
-                byAssignee: {},
+                byAssignee: {
+                    // Initialize all known agents with zero counts
+                    '39948397141915': { total: 0, urgent: 0, open: 0 }, // Bola Kuye
+                    '21761242009371': { total: 0, urgent: 0, open: 0 }, // Candice Brown
+                    '21761363093147': { total: 0, urgent: 0, open: 0 }  // Ron Pineda
+                },
                 unassigned: 0,
                 sla: {
                     breached: 0,
