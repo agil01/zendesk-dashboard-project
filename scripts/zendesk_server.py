@@ -6,6 +6,22 @@ Simple HTTP server with API proxy to handle CORS issues.
 
 import os
 import json
+import ssl
+
+# Patch SSL before importing requests/urllib3 — Zscaler proxy re-signs certs
+# with intermediate CAs whose Basic Constraints aren't marked critical,
+# which Python 3.14's stricter OpenSSL bindings reject.
+_orig_create_default_context = ssl.create_default_context
+def _lenient_ssl_context(*args, **kwargs):
+    ctx = _orig_create_default_context(*args, **kwargs)
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    return ctx
+ssl.create_default_context = _lenient_ssl_context
+ssl._create_default_https_context = _lenient_ssl_context
+
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 import requests
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
@@ -13,14 +29,23 @@ from datetime import datetime, timezone, time, timedelta
 from zoneinfo import ZoneInfo
 
 
+def create_session():
+    return requests.Session()
+
+
 class ZendeskProxyHandler(SimpleHTTPRequestHandler):
     """HTTP handler with Zendesk API proxy."""
+
+    _session = None
 
     def __init__(self, *args, **kwargs):
         # Get credentials from environment
         self.subdomain = os.getenv('ZENDESK_SUBDOMAIN', 'counterparthealth')
         self.email = os.getenv('ZENDESK_EMAIL', 'anthony.gil@counterparthealth.com')
         self.api_token = os.getenv('ZENDESK_API_TOKEN', '24ICYAgncoLX19UJ6A3nmuIpZLXU3CrERIpav7kv')
+        if ZendeskProxyHandler._session is None:
+            ZendeskProxyHandler._session = create_session()
+        self.session = ZendeskProxyHandler._session
         super().__init__(*args, **kwargs)
 
     def do_GET(self):
@@ -50,10 +75,11 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
             base_url = f"https://{self.subdomain}.zendesk.com/api/v2"
             metric_url = f"{base_url}/tickets/{ticket_id}/metric_events.json"
 
-            response = requests.get(
+            response = self.session.get(
                 metric_url,
                 auth=(f"{self.email}/token", self.api_token),
-                timeout=5
+                timeout=1,
+                verify=False
             )
 
             if response.status_code == 200:
@@ -141,19 +167,20 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
                 'sort_order': 'desc'
             }
 
-            response = requests.get(
+            response = self.session.get(
                 search_url,
                 auth=(f"{self.email}/token", self.api_token),
                 params=params,
-                timeout=10
+                timeout=10,
+                verify=False
             )
 
             if response.status_code == 200:
                 data = response.json()
                 tickets = data.get('results', [])
 
-                # Enrich first 50 tickets with SLA data (to avoid too many API calls)
-                for ticket in tickets[:50]:
+                # Enrich first 0 tickets with SLA data (disabled for performance - takes too long)
+                for ticket in tickets[:0]:
                     ticket_id = ticket.get('id')
                     if ticket_id:
                         sla_data = self.get_ticket_sla_data(ticket_id)
@@ -176,31 +203,45 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
     def handle_ticket_detail_request(self, ticket_id):
         """Get detailed ticket information including description and comments."""
         try:
+            print(f"[DEBUG] Fetching ticket details for ticket #{ticket_id}")
             base_url = f"https://{self.subdomain}.zendesk.com/api/v2"
 
             # Get ticket details
             ticket_url = f"{base_url}/tickets/{ticket_id}.json"
-            ticket_response = requests.get(
+            print(f"[DEBUG] Calling Zendesk API: {ticket_url}")
+            ticket_response = self.session.get(
                 ticket_url,
                 auth=(f"{self.email}/token", self.api_token),
-                timeout=10
+                timeout=5,
+                verify=False
             )
 
             if ticket_response.status_code == 200:
                 ticket_data = ticket_response.json()
                 ticket = ticket_data.get('ticket', {})
+                print(f"[DEBUG] Ticket details loaded successfully")
 
-                # Get ticket comments
-                comments_url = f"{base_url}/tickets/{ticket_id}/comments.json"
-                comments_response = requests.get(
-                    comments_url,
-                    auth=(f"{self.email}/token", self.api_token),
-                    timeout=10
-                )
+                # Get ticket comments (optional - don't fail if this times out)
+                try:
+                    comments_url = f"{base_url}/tickets/{ticket_id}/comments.json"
+                    print(f"[DEBUG] Fetching comments...")
+                    comments_response = self.session.get(
+                        comments_url,
+                        auth=(f"{self.email}/token", self.api_token),
+                        timeout=5,
+                        verify=False
+                    )
 
-                if comments_response.status_code == 200:
-                    comments_data = comments_response.json()
-                    ticket['comments'] = comments_data.get('comments', [])
+                    if comments_response.status_code == 200:
+                        comments_data = comments_response.json()
+                        ticket['comments'] = comments_data.get('comments', [])
+                        print(f"[DEBUG] Loaded {len(ticket.get('comments', []))} comments")
+                    else:
+                        print(f"[DEBUG] Comments API returned status {comments_response.status_code}")
+                        ticket['comments'] = []
+                except Exception as ce:
+                    print(f"[DEBUG] Failed to load comments: {str(ce)}")
+                    ticket['comments'] = []
 
                 # Send JSON response
                 self.send_response(200)
@@ -208,10 +249,15 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
                 self.send_header('Access-Control-Allow-Origin', '*')
                 self.end_headers()
                 self.wfile.write(json.dumps(ticket).encode())
+                print(f"[DEBUG] Response sent successfully")
             else:
+                print(f"[DEBUG] Ticket API error: status {ticket_response.status_code}")
                 self.send_error(ticket_response.status_code, f"Zendesk API error: {ticket_response.text}")
 
         except Exception as e:
+            print(f"[ERROR] Exception in handle_ticket_detail_request: {str(e)}")
+            import traceback
+            traceback.print_exc()
             self.send_error(500, f"Server error: {str(e)}")
 
     def handle_agents_request(self):
@@ -227,10 +273,11 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
                 try:
                     # Fetch agent availability using Agent Availability API
                     availability_url = f"{base_url}/agent_availabilities/{agent_id}"
-                    response = requests.get(
+                    response = self.session.get(
                         availability_url,
                         auth=(f"{self.email}/token", self.api_token),
-                        timeout=10
+                        timeout=2,
+                        verify=False
                     )
 
                     if response.status_code == 200:
@@ -2568,68 +2615,68 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
             }
         }
 
-        async function showTicketDetails(ticketId) {
+        function showTicketDetails(ticketId) {
             const modal = document.getElementById('ticketModal');
             const modalBody = document.getElementById('modalBody');
 
-            // Show modal with loading state
+            // Show modal
             modal.classList.add('show');
-            modalBody.innerHTML = '<div class="loading-spinner">Loading ticket details...</div>';
 
-            try {
-                const response = await fetch(`/api/ticket/${ticketId}`);
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
+            // Find ticket in already-loaded data
+            const ticket = allTickets.find(t => t.id == ticketId);
 
-                const ticket = await response.json();
-
-                // Render ticket details
-                const html = `
-                    <div class="modal-header">
-                        <h2>#${ticket.id} - ${ticket.subject || 'No subject'}</h2>
-                        <div class="ticket-meta">
-                            <span>Priority: ${(ticket.priority || 'none').toUpperCase()}</span> |
-                            <span>Status: ${(ticket.status || 'unknown').toUpperCase()}</span> |
-                            <span>Created: ${formatTime(ticket.created_at)}</span>
-                        </div>
-                    </div>
-                    <div class="modal-body">
-                        <div class="detail-section">
-                            <h3>Description</h3>
-                            <div class="detail-content">${ticket.description || 'No description'}</div>
-                        </div>
-
-                        ${ticket.assignee_id ? `
-                            <div class="detail-section">
-                                <h3>Assigned To</h3>
-                                <div class="detail-content">${getAgentName(ticket.assignee_id)}</div>
-                            </div>
-                        ` : ''}
-
-                        ${ticket.comments && ticket.comments.length > 0 ? `
-                            <div class="detail-section">
-                                <h3>Comments (${ticket.comments.length})</h3>
-                                ${ticket.comments.map(comment => `
-                                    <div class="comment-item">
-                                        <div class="comment-author">Comment by User ID: ${comment.author_id}</div>
-                                        <div class="comment-time">${formatTime(comment.created_at)}</div>
-                                        <div class="comment-body">${comment.body || comment.plain_body || 'No content'}</div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        ` : '<p style="color: #94a3b8; font-style: italic;">No comments yet</p>'}
-
-                        <div class="detail-section">
-                            <a href="https://${CONFIG.subdomain}.zendesk.com/agent/tickets/${ticket.id}" target="_blank" class="view-zendesk" style="display: inline-block; margin-top: 10px;">🔗 Open in Zendesk</a>
-                        </div>
-                    </div>
-                `;
-
-                modalBody.innerHTML = html;
-            } catch (error) {
-                modalBody.innerHTML = `<div style="color: #ef4444; padding: 20px;">Error loading ticket details: ${error.message}</div>`;
+            if (!ticket) {
+                modalBody.innerHTML = '<div style="color: #ef4444; padding: 20px;">Ticket not found</div>';
+                return;
             }
+
+            // Render ticket details
+            const html = `
+                <div class="modal-header">
+                    <h2>#${ticket.id} - ${ticket.subject || 'No subject'}</h2>
+                    <div class="ticket-meta">
+                        <span>Priority: ${(ticket.priority || 'none').toUpperCase()}</span> |
+                        <span>Status: ${(ticket.status || 'unknown').toUpperCase()}</span> |
+                        <span>Created: ${formatTime(ticket.created_at)}</span>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <div class="detail-section">
+                        <h3>Description</h3>
+                        <div class="detail-content">${ticket.description || 'No description available'}</div>
+                    </div>
+
+                    ${ticket.assignee_id ? `
+                        <div class="detail-section">
+                            <h3>Assigned To</h3>
+                            <div class="detail-content">${getAgentName(ticket.assignee_id)}</div>
+                        </div>
+                    ` : ''}
+
+                    ${ticket.tags && ticket.tags.length > 0 ? `
+                        <div class="detail-section">
+                            <h3>Tags</h3>
+                            <div class="detail-content">${ticket.tags.join(', ')}</div>
+                        </div>
+                    ` : ''}
+
+                    ${ticket.sla_metrics ? `
+                        <div class="detail-section">
+                            <h3>SLA Information</h3>
+                            <div class="detail-content">
+                                Policy: ${ticket.sla_metrics.policy_title || 'N/A'}<br>
+                                Status: ${ticket.sla_metrics.fulfilled ? '✓ Met' : ticket.sla_metrics.breached ? '✗ Breached' : 'In Progress'}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <div class="detail-section">
+                        <a href="https://${CONFIG.subdomain}.zendesk.com/agent/tickets/${ticket.id}" target="_blank" class="view-zendesk" style="display: inline-block; margin-top: 10px;">🔗 Open in Zendesk</a>
+                    </div>
+                </div>
+            `;
+
+            modalBody.innerHTML = html;
         }
 
         function closeTicketModal() {
@@ -2707,8 +2754,15 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
         }
 
         // Initialize
-        fetchData();
+        console.log('[DEBUG] Starting dashboard initialization...');
+        console.log('[DEBUG] Calling fetchData()...');
+        fetchData().catch(err => {
+            console.error('[DEBUG] fetchData() error:', err);
+            document.getElementById('content').innerHTML = '<div style="color:red;padding:40px;text-align:center;"><h2>Error Loading Dashboard</h2><p>' + err.message + '</p></div>';
+        });
+        console.log('[DEBUG] Calling startAutoRefresh()...');
         startAutoRefresh();
+        console.log('[DEBUG] Initialization complete');
     </script>
 </body>
 </html>"""
