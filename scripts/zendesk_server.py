@@ -1446,6 +1446,13 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
             box-shadow: 0 0 12px currentColor;
         }
 
+        .agent-status-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+        }
+
         .agent-status-label {
             font-family: 'JetBrains Mono', monospace;
             font-size: 10px;
@@ -1455,6 +1462,26 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
             padding: 4px 10px;
             border-radius: 6px;
             border: 1px solid;
+        }
+
+        .agent-status-duration {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--color-text-muted);
+            letter-spacing: 0.5px;
+        }
+
+        .agent-status-duration.online {
+            color: var(--color-success);
+        }
+
+        .agent-status-duration.away {
+            color: var(--color-warning);
+        }
+
+        .agent-status-duration.offline {
+            color: var(--color-error);
         }
 
         .agent-status-label.online {
@@ -1707,28 +1734,43 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
             return AGENT_NAMES[agentId] || `Agent ID: ${agentId}`;
         }
 
+        // Format elapsed time since a status change as "Xh Ym"
+        function formatStatusDuration(updatedAt) {
+            if (!updatedAt) return '';
+            const updatedTime = new Date(updatedAt).getTime();
+            if (isNaN(updatedTime)) return '';
+
+            const diffMs = Math.max(0, Date.now() - updatedTime);
+            const totalMinutes = Math.floor(diffMs / 60000);
+            const hours = Math.floor(totalMinutes / 60);
+            const minutes = totalMinutes % 60;
+
+            return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+        }
+
         // Get agent status from Zendesk unified status
         function getAgentStatus(agentId, agentData) {
             const zendeskStatus = agentStatuses[agentId];
 
             if (zendeskStatus && zendeskStatus.status) {
                 const status = zendeskStatus.status.toLowerCase();
+                const duration = formatStatusDuration(zendeskStatus.updated_at);
 
                 if (status === 'online') {
-                    return { status: 'online', label: 'Online' };
+                    return { status: 'online', label: 'Online', duration };
                 } else if (status === 'away') {
-                    return { status: 'away', label: 'Away' };
+                    return { status: 'away', label: 'Away', duration };
                 } else if (status === 'transfers_only') {
-                    return { status: 'away', label: 'Transfers Only' };
+                    return { status: 'away', label: 'Transfers Only', duration };
                 } else if (status === 'offline') {
-                    return { status: 'offline', label: 'Offline' };
+                    return { status: 'offline', label: 'Offline', duration };
                 } else {
-                    return { status: 'offline', label: 'Offline' };
+                    return { status: 'offline', label: 'Offline', duration };
                 }
             }
 
             // Default to offline if status unknown
-            return { status: 'offline', label: 'Offline' };
+            return { status: 'offline', label: 'Offline', duration: '' };
         }
 
         // Fetch agent statuses from Zendesk
@@ -2051,7 +2093,10 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
                                                     <span class="agent-avatar agent-status-${agentStatus.status}"></span>
                                                     ${getAgentName(assigneeId)}
                                                 </div>
-                                                <span class="agent-status-label ${agentStatus.status}">${agentStatus.label}</span>
+                                                <div class="agent-status-wrap">
+                                                    <span class="agent-status-label ${agentStatus.status}">${agentStatus.label}</span>
+                                                    ${agentStatus.duration ? `<span class="agent-status-duration ${agentStatus.status}">${agentStatus.duration}</span>` : ''}
+                                                </div>
                                             </div>
                                             <div class="agent-metrics">
                                                 <div class="agent-metric" onclick="showFilteredTickets(t => t.assignee_id == '${assigneeId}', '👤 ${getAgentName(assigneeId)} - All Tickets'); event.stopPropagation();">
