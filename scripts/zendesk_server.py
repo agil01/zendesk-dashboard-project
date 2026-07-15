@@ -1441,8 +1441,8 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
         }
 
         .agent-status-offline {
-            background: var(--color-text-muted);
-            color: var(--color-text-muted);
+            background: var(--color-error);
+            color: var(--color-error);
             box-shadow: 0 0 12px currentColor;
         }
 
@@ -1509,9 +1509,9 @@ class ZendeskProxyHandler(SimpleHTTPRequestHandler):
         }
 
         .agent-status-label.offline {
-            color: var(--color-text-muted);
-            border-color: var(--color-text-muted);
-            background: rgba(107, 114, 128, 0.1);
+            color: var(--color-error);
+            border-color: var(--color-error);
+            background: rgba(239, 68, 68, 0.1);
         }
 
         .agent-metrics {
