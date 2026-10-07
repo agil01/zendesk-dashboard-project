@@ -1,0 +1,861 @@
+[
+{
+"id": 6952,
+"status": "closed",
+"priority": "high",
+"created_at": "2026-09-22T10:43:02Z",
+"updated_at": "2026-09-26T12:38:55Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"ehr_configuration",
+"ehr_integration_initiated",
+"external",
+"system_email_notification_failure"
+]
+},
+{
+"id": 6954,
+"status": "closed",
+"priority": "high",
+"created_at": "2026-09-22T10:43:03Z",
+"updated_at": "2026-09-26T12:38:55Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"ehr_configuration",
+"ehr_integration_initiated",
+"external",
+"system_email_notification_failure"
+]
+},
+{
+"id": 6955,
+"status": "hold",
+"priority": "urgent",
+"created_at": "2026-09-22T10:43:04Z",
+"updated_at": "2026-09-23T22:14:17Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"ehr_integration_initiated",
+"system_email_notification_failure"
+]
+},
+{
+"id": 6958,
+"status": "closed",
+"priority": "low",
+"created_at": "2026-09-22T14:51:56Z",
+"updated_at": "2026-09-26T15:41:43Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"external",
+"issue_type_other",
+"other_miscellaneous"
+]
+},
+{
+"id": 6960,
+"status": "closed",
+"priority": "normal",
+"created_at": "2026-09-22T15:36:36Z",
+"updated_at": "2026-09-26T16:42:58Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"created_for_side_conversation",
+"import_npi_/_tin",
+"internal",
+"user_management_admin_console"
+]
+},
+{
+"id": 6966,
+"status": "closed",
+"priority": "low",
+"created_at": "2026-09-22T16:46:05Z",
+"updated_at": "2026-09-26T17:44:00Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"internal",
+"issue_type_other",
+"other_miscellaneous"
+]
+},
+{
+"id": 6973,
+"status": "closed",
+"priority": "normal",
+"created_at": "2026-09-22T19:06:23Z",
+"updated_at": "2026-09-26T20:48:02Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"c2c-cloverhealth_terminations",
+"internal",
+"termination_request",
+"umac_no_action_required",
+"user_management_admin_console"
+]
+},
+{
+"id": 6974,
+"status": "closed",
+"priority": "normal",
+"created_at": "2026-09-22T19:51:39Z",
+"updated_at": "2026-09-26T20:48:03Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"internal",
+"umac_admin_command",
+"user_management_admin_console"
+]
+},
+{
+"id": 6976,
+"status": "closed",
+"priority": "normal",
+"created_at": "2026-09-22T20:57:44Z",
+"updated_at": "2026-09-26T21:49:16Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"claims/payments",
+"internal",
+"timely_filing__tf__denial"
+]
+},
+{
+"id": 6994,
+"status": "closed",
+"priority": "high",
+"created_at": "2026-09-23T11:12:52Z",
+"updated_at": "2026-10-07T03:33:45Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"ehr_configuration",
+"external",
+"kno2_oid_/_publication_info"
+]
+},
+{
+"id": 6995,
+"status": "closed",
+"priority": "high",
+"created_at": "2026-09-23T11:12:53Z",
+"updated_at": "2026-10-07T03:34:09Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"ehr_configuration",
+"external",
+"kno2_oid_/_publication_info"
+]
+},
+{
+"id": 6996,
+"status": "closed",
+"priority": "high",
+"created_at": "2026-09-23T11:16:41Z",
+"updated_at": "2026-10-07T03:34:31Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"ehr_configuration",
+"external",
+"kno2_oid_/_publication_info"
+]
+},
+{
+"id": 6997,
+"status": "closed",
+"priority": "high",
+"created_at": "2026-09-23T11:16:41Z",
+"updated_at": "2026-10-07T03:34:53Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"ehr_configuration",
+"external",
+"kno2_oid_/_publication_info"
+]
+},
+{
+"id": 6998,
+"status": "closed",
+"priority": "normal",
+"created_at": "2026-09-23T12:44:03Z",
+"updated_at": "2026-09-27T14:02:58Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"duplicate_request",
+"c2c-cloverhealth_terminations",
+"internal",
+"termination_request",
+"umac_no_action_required",
+"user_management_admin_console"
+]
+},
+{
+"id": 7001,
+"status": "closed",
+"priority": "high",
+"created_at": "2026-09-23T13:13:14Z",
+"updated_at": "2026-09-27T15:03:24Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"ehr_configuration",
+"ehr_integration_initiated",
+"external",
+"system_email_notification_failure"
+]
+},
+{
+"id": 7005,
+"status": "closed",
+"priority": "high",
+"created_at": "2026-09-23T13:37:07Z",
+"updated_at": "2026-10-07T03:35:14Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"ehr_configuration",
+"external",
+"kno2_oid_/_publication_info"
+]
+},
+{
+"id": 7006,
+"status": "closed",
+"priority": "high",
+"created_at": "2026-09-23T13:37:07Z",
+"updated_at": "2026-10-07T03:35:36Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"ehr_configuration",
+"external",
+"kno2_oid_/_publication_info"
+]
+},
+{
+"id": 7009,
+"status": "closed",
+"priority": "normal",
+"created_at": "2026-09-23T14:20:13Z",
+"updated_at": "2026-09-27T15:03:24Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"c2c-cloverhealth_terminations",
+"internal",
+"termination_request",
+"umac_no_action_required",
+"user_management_admin_console"
+]
+},
+{
+"id": 7011,
+"status": "closed",
+"priority": "normal",
+"created_at": "2026-09-23T15:54:51Z",
+"updated_at": "2026-09-27T17:05:16Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"claims/payments",
+"internal",
+"timely_filing__tf__denial"
+]
+},
+{
+"id": 7013,
+"status": "closed",
+"priority": "normal",
+"created_at": "2026-09-23T16:18:58Z",
+"updated_at": "2026-09-27T17:05:17Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"claims/payments",
+"internal",
+"timely_filing__tf__denial"
+]
+},
+{
+"id": 7018,
+"status": "closed",
+"priority": "normal",
+"created_at": "2026-09-23T17:09:07Z",
+"updated_at": "2026-09-27T18:06:03Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"claims/payments",
+"internal",
+"timely_filing__tf__denial"
+]
+},
+{
+"id": 7023,
+"status": "closed",
+"priority": "high",
+"created_at": "2026-09-23T18:41:27Z",
+"updated_at": "2026-10-04T14:24:06Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"ehr_app_new_ehr_bug_identified",
+"ehr_application_issues",
+"internal"
+]
+},
+{
+"id": 7025,
+"status": "closed",
+"priority": "normal",
+"created_at": "2026-09-23T19:08:49Z",
+"updated_at": "2026-09-27T20:08:07Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"duplicate_request",
+"c2c-cloverhealth_terminations",
+"internal",
+"termination_request",
+"umac_no_action_required",
+"user_management_admin_console"
+]
+},
+{
+"id": 7027,
+"status": "closed",
+"priority": "high",
+"created_at": "2026-09-23T19:59:03Z",
+"updated_at": "2026-09-27T21:09:20Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"ehr_configuration",
+"ehr_integration_initiated",
+"external",
+"system_email_notification_failure"
+]
+},
+{
+"id": 7031,
+"status": "closed",
+"priority": "low",
+"created_at": "2026-09-24T09:04:59Z",
+"updated_at": "2026-09-28T12:25:15Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"external",
+"issue_type_other",
+"other_miscellaneous"
+]
+},
+{
+"id": 7032,
+"status": "closed",
+"priority": "low",
+"created_at": "2026-09-24T09:07:46Z",
+"updated_at": "2026-09-28T12:25:16Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"external",
+"issue_type_other",
+"other_miscellaneous"
+]
+},
+{
+"id": 7034,
+"status": "closed",
+"priority": "low",
+"created_at": "2026-09-24T09:11:26Z",
+"updated_at": "2026-09-28T12:25:16Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"external",
+"issue_type_other",
+"other_miscellaneous"
+]
+},
+{
+"id": 7035,
+"status": "closed",
+"priority": "low",
+"created_at": "2026-09-24T09:15:24Z",
+"updated_at": "2026-09-28T12:25:18Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"external",
+"issue_type_other",
+"other_miscellaneous"
+]
+},
+{
+"id": 7036,
+"status": "closed",
+"priority": "low",
+"created_at": "2026-09-24T09:27:40Z",
+"updated_at": "2026-09-28T12:25:17Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"external",
+"issue_type_other",
+"other_miscellaneous"
+]
+},
+{
+"id": 7039,
+"status": "closed",
+"priority": "low",
+"created_at": "2026-09-24T09:31:31Z",
+"updated_at": "2026-09-28T13:25:51Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"external",
+"issue_type_other",
+"other_miscellaneous"
+]
+},
+{
+"id": 7041,
+"status": "closed",
+"priority": "normal",
+"created_at": "2026-09-24T11:14:24Z",
+"updated_at": "2026-09-28T17:35:49Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"create_employee_user",
+"internal",
+"user_management_admin_console"
+]
+},
+{
+"id": 7043,
+"status": "closed",
+"priority": "high",
+"created_at": "2026-09-24T15:59:56Z",
+"updated_at": "2026-09-28T16:33:40Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"ehr_configuration",
+"ehr_integration_initiated",
+"external",
+"system_email_notification_failure"
+]
+},
+{
+"id": 7046,
+"status": "closed",
+"priority": "high",
+"created_at": "2026-09-24T17:01:19Z",
+"updated_at": "2026-10-06T21:45:59Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"ehr_configuration",
+"ehr_data_integration_athena",
+"internal",
+"umac_no_response_internal_user"
+]
+},
+{
+"id": 7048,
+"status": "closed",
+"priority": "normal",
+"created_at": "2026-09-24T18:31:41Z",
+"updated_at": "2026-09-28T20:43:00Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"claims/payments",
+"internal",
+"rematch_visits"
+]
+},
+{
+"id": 7050,
+"status": "closed",
+"priority": "high",
+"created_at": "2026-09-24T19:39:55Z",
+"updated_at": "2026-09-28T20:43:01Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"ehr_configuration",
+"ehr_data_other",
+"hum_practice_activation",
+"internal",
+"practice_onboarding"
+]
+},
+{
+"id": 7052,
+"status": "closed",
+"priority": "high",
+"created_at": "2026-09-24T22:18:17Z",
+"updated_at": "2026-09-29T16:15:50Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"ehr_configuration",
+"ehr_data_integration_ecw",
+"hum_practice_activation",
+"internal",
+"practice_onboarding"
+]
+},
+{
+"id": 7054,
+"status": "closed",
+"priority": "normal",
+"created_at": "2026-09-25T08:27:27Z",
+"updated_at": "2026-09-29T17:18:53Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"create_employee_user",
+"internal",
+"user_management_admin_console"
+]
+},
+{
+"id": 7059,
+"status": "closed",
+"priority": "normal",
+"created_at": "2026-09-25T17:14:23Z",
+"updated_at": "2026-09-29T20:27:57Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"import_npi_/_tin",
+"internal",
+"user_management_admin_console"
+]
+},
+{
+"id": 7062,
+"status": "closed",
+"priority": "normal",
+"created_at": "2026-09-25T17:34:22Z",
+"updated_at": "2026-09-29T18:21:35Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"c2c-cloverhealth_terminations",
+"internal",
+"termination_request",
+"umac_no_action_required",
+"user_management_admin_console"
+]
+},
+{
+"id": 7065,
+"status": "closed",
+"priority": "normal",
+"created_at": "2026-09-25T18:24:27Z",
+"updated_at": "2026-10-03T21:02:23Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"claims/payments",
+"internal",
+"timely_filing__tf__denial"
+]
+},
+{
+"id": 7068,
+"status": "closed",
+"priority": "high",
+"created_at": "2026-09-25T19:26:58Z",
+"updated_at": "2026-09-29T20:27:58Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"ehr_configuration",
+"ehr_integration_-_other_ehr",
+"hum_practice_activation",
+"internal",
+"practice_onboarding"
+]
+},
+{
+"id": 7071,
+"status": "closed",
+"priority": "high",
+"created_at": "2026-09-25T20:04:19Z",
+"updated_at": "2026-09-29T20:28:00Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"ehr_configuration",
+"external",
+"kno2_submission"
+]
+},
+{
+"id": 7073,
+"status": "closed",
+"priority": "high",
+"created_at": "2026-09-25T20:10:34Z",
+"updated_at": "2026-10-07T03:21:04Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"ehr_configuration",
+"external",
+"kno2_oid_/_publication_info"
+]
+},
+{
+"id": 7076,
+"status": "closed",
+"priority": "high",
+"created_at": "2026-09-25T20:13:15Z",
+"updated_at": "2026-10-07T03:22:00Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"ehr_configuration",
+"external",
+"kno2_oid_/_publication_info"
+]
+},
+{
+"id": 7078,
+"status": "closed",
+"priority": "high",
+"created_at": "2026-09-25T20:14:15Z",
+"updated_at": "2026-10-07T03:22:55Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"ehr_configuration",
+"external",
+"kno2_oid_/_publication_info"
+]
+},
+{
+"id": 7080,
+"status": "closed",
+"priority": "high",
+"created_at": "2026-09-25T20:15:17Z",
+"updated_at": "2026-10-07T03:23:35Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"ehr_configuration",
+"external",
+"kno2_oid_/_publication_info"
+]
+},
+{
+"id": 7082,
+"status": "closed",
+"priority": "high",
+"created_at": "2026-09-25T20:16:32Z",
+"updated_at": "2026-10-07T03:24:58Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"ehr_configuration",
+"external",
+"kno2_oid_/_publication_info"
+]
+},
+{
+"id": 7083,
+"status": "closed",
+"priority": "high",
+"created_at": "2026-09-25T20:16:39Z",
+"updated_at": "2026-10-07T03:25:47Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"ehr_configuration",
+"external",
+"kno2_oid_/_publication_info"
+]
+},
+{
+"id": 7085,
+"status": "closed",
+"priority": "high",
+"created_at": "2026-09-25T20:17:30Z",
+"updated_at": "2026-10-07T03:26:08Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"ehr_configuration",
+"external",
+"kno2_oid_/_publication_info"
+]
+},
+{
+"id": 7084,
+"status": "closed",
+"priority": "high",
+"created_at": "2026-09-25T20:17:30Z",
+"updated_at": "2026-10-07T03:25:21Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"ehr_configuration",
+"external",
+"kno2_oid_/_publication_info"
+]
+},
+{
+"id": 7086,
+"status": "closed",
+"priority": "high",
+"created_at": "2026-09-25T20:18:22Z",
+"updated_at": "2026-10-07T03:26:29Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"ehr_configuration",
+"external",
+"kno2_oid_/_publication_info"
+]
+},
+{
+"id": 7089,
+"status": "closed",
+"priority": "high",
+"created_at": "2026-09-25T20:19:16Z",
+"updated_at": "2026-10-07T03:28:03Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"ehr_configuration",
+"external",
+"kno2_oid_/_publication_info"
+]
+},
+{
+"id": 7091,
+"status": "closed",
+"priority": "normal",
+"created_at": "2026-09-25T20:28:41Z",
+"updated_at": "2026-09-29T21:29:26Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"c2c-cloverhealth_terminations",
+"internal",
+"termination_request",
+"umac_no_action_required",
+"user_management_admin_console"
+]
+},
+{
+"id": 7093,
+"status": "pending",
+"priority": "high",
+"created_at": "2026-09-25T21:02:49Z",
+"updated_at": "2026-09-29T15:17:05Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"ehr_application_issues",
+"internal"
+]
+},
+{
+"id": 7094,
+"status": "closed",
+"priority": "high",
+"created_at": "2026-09-25T23:27:44Z",
+"updated_at": "2026-10-02T03:58:10Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"ehr_configuration",
+"external",
+"kno2_submission"
+]
+},
+{
+"id": 7095,
+"status": "closed",
+"priority": "normal",
+"created_at": "2026-09-26T04:47:33Z",
+"updated_at": "2026-10-02T03:58:11Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"c2c-cloverhealth_terminations",
+"internal",
+"termination_request",
+"umac_no_action_required",
+"user_management_admin_console"
+]
+},
+{
+"id": 7096,
+"status": "closed",
+"priority": "normal",
+"created_at": "2026-09-27T11:11:40Z",
+"updated_at": "2026-10-02T03:58:11Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"c2c-cloverhealth_terminations",
+"internal",
+"termination_request",
+"umac_no_action_required",
+"user_management_admin_console"
+]
+},
+{
+"id": 7097,
+"status": "closed",
+"priority": "normal",
+"created_at": "2026-09-27T11:11:42Z",
+"updated_at": "2026-10-02T03:58:11Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"c2c-cloverhealth_terminations",
+"internal",
+"termination_request",
+"umac_no_action_required",
+"user_management_admin_console"
+]
+},
+{
+"id": 7098,
+"status": "closed",
+"priority": "normal",
+"created_at": "2026-09-27T11:14:44Z",
+"updated_at": "2026-10-02T03:58:11Z",
+"requester_id": "",
+"assignee_id": "21761363093147",
+"tags": [
+"c2c-cloverhealth_terminations",
+"internal",
+"termination_request",
+"umac_no_action_required",
+"user_management_admin_console"
+]
+}
+]

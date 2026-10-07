@@ -1,0 +1,427 @@
+[
+{
+"id": 7105,
+"status": "closed",
+"priority": "high",
+"created_at": "2026-09-28T17:42:10Z",
+"updated_at": "2026-10-02T18:22:13Z",
+"requester_id": "37957366469275",
+"assignee_id": "21761363093147",
+"tags": [
+"ehr_configuration",
+"ehr_data_integration_athena",
+"external",
+"system_email_notification_failure"
+]
+},
+{
+"id": 7106,
+"status": "closed",
+"priority": "urgent",
+"created_at": "2026-09-28T18:00:56Z",
+"updated_at": "2026-10-03T21:02:23Z",
+"requester_id": "23268714450459",
+"assignee_id": "21761363093147",
+"tags": [
+"app_issues_other",
+"application_issues",
+"internal"
+]
+},
+{
+"id": 7110,
+"status": "closed",
+"priority": "normal",
+"created_at": "2026-09-28T19:59:08Z",
+"updated_at": "2026-10-02T21:32:21Z",
+"requester_id": "21761363093147",
+"assignee_id": "21761363093147",
+"tags": [
+"c2c-cloverhealth_terminations",
+"internal",
+"termination_request",
+"umac_no_action_required",
+"user_management_admin_console"
+]
+},
+{
+"id": 7120,
+"status": "closed",
+"priority": "normal",
+"created_at": "2026-09-29T12:34:54Z",
+"updated_at": "2026-10-03T13:54:03Z",
+"requester_id": "51569749704219",
+"assignee_id": "21761363093147",
+"tags": [
+"import_npi_/_tin",
+"internal",
+"user_management_admin_console"
+]
+},
+{
+"id": 7121,
+"status": "closed",
+"priority": "normal",
+"created_at": "2026-09-29T12:42:02Z",
+"updated_at": "2026-10-03T12:53:30Z",
+"requester_id": "21761363093147",
+"assignee_id": "21761363093147",
+"tags": [
+"c2c-cloverhealth_terminations",
+"internal",
+"termination_request",
+"umac_no_action_required",
+"user_management_admin_console"
+]
+},
+{
+"id": 7123,
+"status": "closed",
+"priority": "low",
+"created_at": "2026-09-29T13:15:38Z",
+"updated_at": "2026-10-03T14:55:14Z",
+"requester_id": "42187881318171",
+"assignee_id": "21761363093147",
+"tags": [
+"eue_issue_type_delete_reopen_ccv",
+"internal",
+"issue_type_external_user_error"
+]
+},
+{
+"id": 7126,
+"status": "closed",
+"priority": "low",
+"created_at": "2026-09-29T15:04:09Z",
+"updated_at": "2026-10-03T16:56:13Z",
+"requester_id": "53003879915163",
+"assignee_id": "21761363093147",
+"tags": [
+"internal",
+"issue_type_internal_user_error",
+"iue_user_training"
+]
+},
+{
+"id": 7128,
+"status": "closed",
+"priority": "normal",
+"created_at": "2026-09-29T15:55:16Z",
+"updated_at": "2026-10-03T18:59:31Z",
+"requester_id": "23268484737307",
+"assignee_id": "21761363093147",
+"tags": [
+"claims/payments",
+"internal",
+"rematch_visits"
+]
+},
+{
+"id": 7132,
+"status": "closed",
+"priority": "normal",
+"created_at": "2026-09-29T20:19:13Z",
+"updated_at": "2026-10-03T21:02:24Z",
+"requester_id": "44155077949211",
+"assignee_id": "21761363093147",
+"tags": [
+"import_npi_/_tin",
+"internal",
+"user_management_admin_console"
+]
+},
+{
+"id": 7137,
+"status": "pending",
+"priority": "urgent",
+"created_at": "2026-09-30T13:42:58Z",
+"updated_at": "2026-10-01T14:21:24Z",
+"requester_id": "48758479191451",
+"assignee_id": "21761363093147",
+"tags": []
+},
+{
+"id": 7139,
+"status": "closed",
+"priority": "normal",
+"created_at": "2026-09-30T14:20:43Z",
+"updated_at": "2026-10-04T18:28:08Z",
+"requester_id": "34668496427803",
+"assignee_id": "21761363093147",
+"tags": [
+"claims/payments",
+"internal",
+"timely_filing__tf__denial"
+]
+},
+{
+"id": 7141,
+"status": "pending",
+"priority": "urgent",
+"created_at": "2026-09-30T18:22:46Z",
+"updated_at": "2026-10-06T13:03:13Z",
+"requester_id": "53002486176027",
+"assignee_id": "21761363093147",
+"tags": [
+"ehr_integration_initiated",
+"hum_practice_activation",
+"practice_onboarding"
+]
+},
+{
+"id": 7147,
+"status": "closed",
+"priority": "high",
+"created_at": "2026-10-01T02:36:29Z",
+"updated_at": "2026-10-05T15:51:02Z",
+"requester_id": "48759527254811",
+"assignee_id": "21761363093147",
+"tags": [
+"add_new_group_/_user_s___conei",
+"customer_onboarding_non-ehr_integrated",
+"ehr_integration_initiated",
+"hum_practice_activation",
+"internal",
+"practice_onboarding"
+]
+},
+{
+"id": 7151,
+"status": "closed",
+"priority": "normal",
+"created_at": "2026-10-01T13:40:01Z",
+"updated_at": "2026-10-05T14:48:06Z",
+"requester_id": "34668496427803",
+"assignee_id": "21761363093147",
+"tags": [
+"import_npi_/_tin",
+"internal",
+"user_management_admin_console"
+]
+},
+{
+"id": 7157,
+"status": "solved",
+"priority": "normal",
+"created_at": "2026-10-01T16:45:10Z",
+"updated_at": "2026-10-06T00:38:13Z",
+"requester_id": "52132283965979",
+"assignee_id": "21761363093147",
+"tags": [
+"environment/user_role_access_change",
+"internal",
+"user_management_admin_console"
+]
+},
+{
+"id": 7158,
+"status": "closed",
+"priority": "normal",
+"created_at": "2026-10-01T18:37:40Z",
+"updated_at": "2026-10-05T21:04:27Z",
+"requester_id": "38862985078043",
+"assignee_id": "21761363093147",
+"tags": [
+"claims/payments",
+"internal",
+"timely_filing__tf__denial"
+]
+},
+{
+"id": 7163,
+"status": "closed",
+"priority": "normal",
+"created_at": "2026-10-01T20:32:06Z",
+"updated_at": "2026-10-05T21:04:27Z",
+"requester_id": "21761363093147",
+"assignee_id": "21761363093147",
+"tags": [
+"c2c-cloverhealth_terminations",
+"internal",
+"termination_request",
+"umac_no_action_required",
+"user_management_admin_console"
+]
+},
+{
+"id": 7170,
+"status": "closed",
+"priority": "high",
+"created_at": "2026-10-01T22:32:41Z",
+"updated_at": "2026-10-07T02:38:06Z",
+"requester_id": "55077953642651",
+"assignee_id": "21761363093147",
+"tags": [
+"ehr_configuration",
+"external",
+"kno2_oid_/_publication_info"
+]
+},
+{
+"id": 7172,
+"status": "closed",
+"priority": "normal",
+"created_at": "2026-10-02T06:49:06Z",
+"updated_at": "2026-10-06T12:28:14Z",
+"requester_id": "23268520465179",
+"assignee_id": "21761363093147",
+"tags": [
+"import_npi_/_tin",
+"internal",
+"user_management_admin_console"
+]
+},
+{
+"id": 7175,
+"status": "closed",
+"priority": "high",
+"created_at": "2026-10-02T13:54:48Z",
+"updated_at": "2026-10-06T18:39:57Z",
+"requester_id": "44155077949211",
+"assignee_id": "21761363093147",
+"tags": [
+"ehr_configuration",
+"ehr_data_other",
+"internal"
+]
+},
+{
+"id": 7177,
+"status": "closed",
+"priority": "high",
+"created_at": "2026-10-02T14:11:07Z",
+"updated_at": "2026-10-06T20:43:30Z",
+"requester_id": "51741593582363",
+"assignee_id": "21761363093147",
+"tags": [
+"add_new_group_/_user_s___conei",
+"customer_onboarding_non-ehr_integrated",
+"ehr_integration_initiated",
+"hum_practice_activation",
+"internal",
+"practice_onboarding"
+]
+},
+{
+"id": 7180,
+"status": "pending",
+"priority": "urgent",
+"created_at": "2026-10-02T15:22:41Z",
+"updated_at": "2026-10-02T16:40:26Z",
+"requester_id": "51570126234651",
+"assignee_id": "21761363093147",
+"tags": [
+"ehr_integration_initiated",
+"hum_practice_activation",
+"practice_onboarding"
+]
+},
+{
+"id": 7181,
+"status": "pending",
+"priority": "urgent",
+"created_at": "2026-10-02T15:39:29Z",
+"updated_at": "2026-10-05T22:58:44Z",
+"requester_id": "47563015441947",
+"assignee_id": "21761363093147",
+"tags": []
+},
+{
+"id": 7183,
+"status": "solved",
+"priority": "low",
+"created_at": "2026-10-02T17:21:28Z",
+"updated_at": "2026-10-06T17:49:57Z",
+"requester_id": "23268513721115",
+"assignee_id": "21761363093147",
+"tags": [
+"eue_user_training",
+"internal",
+"issue_type_external_user_error"
+]
+},
+{
+"id": 7186,
+"status": "closed",
+"priority": "normal",
+"created_at": "2026-10-02T18:11:50Z",
+"updated_at": "2026-10-06T20:43:30Z",
+"requester_id": "23268513721115",
+"assignee_id": "21761363093147",
+"tags": [
+"claims/payments",
+"internal",
+"timely_filing__tf__denial"
+]
+},
+{
+"id": 7187,
+"status": "closed",
+"priority": "normal",
+"created_at": "2026-10-02T18:54:06Z",
+"updated_at": "2026-10-06T21:46:00Z",
+"requester_id": "34668496427803",
+"assignee_id": "21761363093147",
+"tags": [
+"claims/payments",
+"internal",
+"timely_filing__tf__denial"
+]
+},
+{
+"id": 7190,
+"status": "solved",
+"priority": "normal",
+"created_at": "2026-10-02T21:06:44Z",
+"updated_at": "2026-10-05T22:39:26Z",
+"requester_id": "49917304607771",
+"assignee_id": "21761363093147",
+"tags": [
+"claims/payments",
+"cp_other",
+"internal"
+]
+},
+{
+"id": 7200,
+"status": "solved",
+"priority": "low",
+"created_at": "2026-10-04T17:20:34Z",
+"updated_at": "2026-10-04T22:43:31Z",
+"requester_id": "46223547200923",
+"assignee_id": "21761363093147",
+"tags": [
+"external",
+"issue_type_other",
+"other_miscellaneous"
+]
+},
+{
+"id": 7201,
+"status": "solved",
+"priority": "low",
+"created_at": "2026-10-04T17:21:35Z",
+"updated_at": "2026-10-04T22:44:37Z",
+"requester_id": "46223547200923",
+"assignee_id": "21761363093147",
+"tags": [
+"external",
+"issue_type_other",
+"other_miscellaneous"
+]
+},
+{
+"id": 7202,
+"status": "solved",
+"priority": "low",
+"created_at": "2026-10-04T17:23:59Z",
+"updated_at": "2026-10-05T14:17:44Z",
+"requester_id": "46223547200923",
+"assignee_id": "21761363093147",
+"tags": [
+"external",
+"issue_type_other",
+"other_miscellaneous"
+]
+}
+]
